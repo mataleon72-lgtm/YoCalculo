@@ -138,29 +138,9 @@
                     <select id="provincia_obra">
                         <option value="Buenos Aires">Buenos Aires</option>
                         <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
-                        <option value="Catamarca">Catamarca</option>
-                        <option value="Chaco">Chaco</option>
-                        <option value="Chubut">Chubut</option>
                         <option value="Córdoba">Córdoba</option>
-                        <option value="Corrientes">Corrientes</option>
-                        <option value="Entre Ríos">Entre Ríos</option>
-                        <option value="Formosa">Formosa</option>
-                        <option value="Jujuy">Jujuy</option>
-                        <option value="La Pampa">La Pampa</option>
-                        <option value="La Rioja">La Rioja</option>
-                        <option value="Mendoza">Mendoza</option>
-                        <option value="Misiones">Misiones</option>
-                        <option value="Neuquén">Neuquén</option>
-                        <option value="Río Negro">Río Negro</option>
-                        <option value="Salta">Salta</option>
-                        <option value="San Juan">San Juan</option>
-                        <option value="San Luis">San Luis</option>
-                        <option value="Santa Cruz">Santa Cruz</option>
                         <option value="Santa Fe">Santa Fe</option>
-                        <option value="Santiago del Estero">Santiago del Estero</option>
-                        <option value="Tierra del Fuego">Tierra del Fuego</option>
-                        <option value="Tucumán">Tucumán</option>
-                </select>
+                    </select>
                     <label>Localidad / Ciudad de la Obra</label>
                     <input type="text" id="localidad_obra" placeholder="Ej: Morón, San Isidro, Rosario...">
                 </div>
@@ -180,7 +160,7 @@
 
     <script>
         const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
-        // CLAVE EXACTA VERIFICADA POR EL DIRECTOR:
+        // CLAVE EXACTA VERIFICADA:
         const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
 
@@ -207,7 +187,6 @@
             document.getElementById('areaCarpeta').value = "";
             document.getElementById('nombreUsuario').value = "";
             cambiarPantalla('pantalla-formulario');
-            alert("¡Cálculo reiniciado!");
         }
 
         function calcularMamposteria() {
@@ -223,7 +202,6 @@
             if(largo === 0 || alto === 0) { alert("Por favor, completá las dimensiones del muro."); return; }
 
             var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
-
             var areaBrutaMuro = largo * alto; 
             var areaNetaMuro = Math.max(0, areaBrutaMuro - aberturas); 
             globalAreaNetaMuro = areaNetaMuro;
@@ -464,7 +442,6 @@
             document.getElementById('loader-precios').style.display = 'block';
 
             try {
-                // Función que limpia TODO: acentos, mayúsculas y espacios basura
                 function limpiarAcentos(texto) {
                     if (!texto) return "";
                     return texto.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -473,7 +450,6 @@
                 var localidad_escrita = limpiarAcentos(localidad_bruta);
                 var provincia_limpia = limpiarAcentos(provincia_seleccionada);
 
-                // Traemos todos los proveedores ACTIVOS y los filtramos acá para que el servidor no se maree con los acentos
                 const { data: corralones, error } = await supabaseClient
                     .from('proveedores')
                     .select('*')
@@ -481,7 +457,6 @@
 
                 if (error) throw error;
 
-                // El filtro milimétrico: compara rubro, provincia y localidad totalmente limpios
                 const matData = (corralones || []).filter(p => {
                     const rubroBase = limpiarAcentos(p.rubro_especifico);
                     const locBase = limpiarAcentos(p.localidad);
@@ -491,49 +466,6 @@
                            locBase === localidad_escrita && 
                            provBase === provincia_limpia;
                 });
-
-                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
-                contenedor.innerHTML = ""; 
-
-                let htmlMat = "";
-                if (matData.length > 0) {
-                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">🧱 CORRALONES DESTACADOS</div>`;
-                    matData.forEach(prov => {
-                        htmlMat += `
-                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
-                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
-                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
-                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
-                            </div>`;
-                    });
-                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos corralón? Suscribite acá</a></div></div>`;
-                } else {
-                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni caleras destacadas aquí para esta localidad.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
-                }
-
-                contenedor.innerHTML = htmlMat;
-
-            } catch (err) {
-                console.error("Error Supabase:", err);
-                const msg = err.message || JSON.stringify(err);
-                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<div class="tarjeta-zona-libre" style="border-color:red; background:#ffecec;"><h3 style="color:red;">Error</h3><p style="font-size:11px; color:#333;">${msg}</p></div>`;
-            }
-
-            document.getElementById('form-cotizador').style.display = 'block'; 
-            document.getElementById('loader-precios').style.display = 'none'; 
-            document.getElementById('btn-buscar-precios').style.display = 'block';
-            cambiarPantalla('pantalla-precio-final');
-        }
-
-                function limpiarAcentos(texto) {
-                    if (!texto) return "";
-                    return texto.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                }
-
-                const matData = (corralones || []).filter(p => 
-                    limpiarAcentos(p.localidad || "") === localidad_escrita && 
-                    p.provincia === provincia_seleccionada
-                );
 
                 const contenedor = document.getElementById('contenedor-dinamico-proveedores');
                 contenedor.innerHTML = ""; 
