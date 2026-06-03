@@ -19,7 +19,7 @@
         @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
         .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
         .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
-        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; position: absolute; top: 36px; left: 0; width: 100%; height: calc(100% - 36px); background: #F4F5F7; z-index: 10; } 
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; height: calc(100% - 36px); position: relative; } 
         .pantalla.activa { display: flex; }
         .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
         .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
@@ -76,6 +76,12 @@
             <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Hormigón Estructural</h2></div>
             <div class="contenido-scroll">
                 <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Tus Datos</div>
+                    <label>Tu Nombre y Apellido</label>
+                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
+                </div>
+
+                <div class="tarjeta-blanca">
                     <div class="seccion-titulo">Dimensionamiento General</div>
                     <label>Elemento Constructivo</label>
                     <select id="tipoEstructura" onchange="ajustarCampos()">
@@ -88,13 +94,13 @@
                     </select>
                     
                     <div id="bloque-dinamico-inputs">
-                        <label id="lbl1">Metros Lineales Totales</label>
+                        <label id="lbl1">Metros Lineales Totales (m)</label>
                         <input type="number" id="v1" placeholder="0.00" step="0.1">
                         
-                        <label id="lbl2">Ancho de Sección (m)</label>
+                        <label id="lbl2">Ancho de la Viga (m) - Ej: 0.15</label>
                         <input type="number" id="v2" placeholder="0.00" step="0.05">
                         
-                        <label id="lbl3">Alto de Sección (m)</label>
+                        <label id="lbl3">Alto de la Viga (m) - Ej: 0.30</label>
                         <input type="number" id="v3" placeholder="0.00" step="0.05">
                     </div>
                 </div>
@@ -240,6 +246,7 @@
             globalAlambreKg = 0; globalViguetasCount = 0; globalLadrillosEps = 0; globalMallasSima = 0;
             textoPedidoWhatsAppMaster = ""; textoArchivoDescargaMaster = "";
             limpiarFormularioFisicoA0();
+            document.getElementById('nombreUsuario').value = "";
             document.getElementById('tipoEstructura').value = "viga_fundacion";
             ajustarCampos();
             cambiarPantalla('pantalla-formulario');
@@ -254,6 +261,8 @@
 
             if(v1 === 0 || v2 === 0) { alert("Socio, completá las medidas del componente estructural primero."); return; }
 
+            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
+
             var m3 = 0; var bolsasCemento = 0; var arenaM3 = 0; var piedraM3 = 0;
             var hierro10 = 0; var hierro8 = 0; var hierro6 = 0; var mallas42 = 0; var mallasSima = 0;
             var alambre = 0; var viguetas = 0; var ladrillosEps = 0;
@@ -263,39 +272,39 @@
             if (tipo === 'viga_fundacion' || tipo === 'viga_encadenado') {
                 estructuraSeleccionadaNombre = (tipo === 'viga_fundacion') ? "Vigas de Fundación" : "Vigas de Encadenado";
                 m3 = v1 * v2 * v3;
-                hierro10 = Math.ceil((v1 * 4) / 12); 
+                hierro10 = Math.ceil((v1 * 4) / 12); 
                 var cantEstribos = v1 / 0.20;
-                var perimetroEstribo = ((v2 + v3) * 2) + 0.10; 
+                var perimetroEstribo = ((v2 + v3) * 2) + 0.10; 
                 hierro6 = Math.ceil((cantEstribos * perimetroEstribo) / 12);
-                alambre = Math.ceil(v1 * 0.1); 
-            } 
+                alambre = Math.ceil(v1 * 0.1); 
+            } 
             else if (tipo === 'zapatas') {
                 estructuraSeleccionadaNombre = "Zapatas Aisladas";
-                m3 = v1 * (v2 * v2) * v3; 
+                m3 = v1 * (v2 * v2) * v3; 
                 var varillasPorZapata = Math.ceil(v2 / 0.15) * 2;
                 hierro10 = Math.ceil((v1 * varillasPorZapata * v2) / 12);
                 alambre = Math.ceil(v1 * 0.5);
-            } 
+            } 
             else if (tipo === 'platea') {
                 estructuraSeleccionadaNombre = "Platea de Fundación";
-                m3 = v1 * v2; 
+                m3 = v1 * v2; 
                 mallasSima = Math.ceil(v1 / 13);
                 alambre = Math.ceil(mallasSima * 0.8);
-            } 
+            } 
             else if (tipo === 'losa_armada') {
                 estructuraSeleccionadaNombre = "Losa Maciza H°A°";
-                m3 = v1 * v2; 
-                var metrosHierroM2 = (1 / 0.15) * 2 * 2; 
+                m3 = v1 * v2; 
+                var metrosHierroM2 = (1 / 0.15) * 2 * 2; 
                 hierro8 = Math.ceil((v1 * metrosHierroM2) / 12);
                 alambre = Math.ceil(v1 * 0.15);
-            } 
+            } 
             else if (tipo === 'losa_viguetas') {
                 estructuraSeleccionadaNombre = "Losa de Viguetas y EPS";
                 var areaLosa = v1 * v2;
-                m3 = areaLosa * v3; 
-                viguetas = Math.ceil(v2 * 1.6); 
-                ladrillosEps = Math.ceil(areaLosa * 5); 
-                mallas42 = Math.ceil(areaLosa / 14); 
+                m3 = areaLosa * v3; 
+                viguetas = Math.ceil(v2 * 1.6); 
+                ladrillosEps = Math.ceil(areaLosa * 5); 
+                mallas42 = Math.ceil(areaLosa / 14); 
             }
 
             bolsasCemento = Math.ceil(m3 * dosifCementoBag * 1.08);
@@ -348,7 +357,9 @@
 
             document.getElementById('contenedorDesgloseResultados').innerHTML = htmlRubros;
 
-            textoPedidoWhatsAppMaster = "Hola! Solicito cotización para componentes estructurales de " + estructuraSeleccionadaNombre + " calculados en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
+            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
+            textoPedidoWhatsAppMaster += "Componentes estructurales de " + estructuraSeleccionadaNombre + ":\n";
             textoPedidoWhatsAppMaster += "- Cemento Portland (50kg): " + bolsasCemento + " bolsas\n";
             textoPedidoWhatsAppMaster += "- Arena de Cava: " + arenaM3 + " m³\n";
             textoPedidoWhatsAppMaster += "- Piedra Partida: " + piedraM3 + " m³\n";
@@ -361,12 +372,13 @@
                 textoPedidoWhatsAppMaster += "- Ladrillos EPS Isopor: " + ladrillosEps + " u.\n";
                 textoPedidoWhatsAppMaster += "- Mallas Reparto 4.2mm: " + mallas42 + " paños\n";
             }
-            if(alambre > 0) textoPedidoWhatsAppMaster += "- Alambre Recocido N°16: " + alambre + " Kg\n";
-            textoPedidoWhatsAppMaster += "\nFavor detallar costo de envío a la obra. Gracias!";
+            if(alambre > 0) textoPedidoWhatsAppMaster += "- Alambre Recocido N°16: " + alambre + " Kg\n\n";
+            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
 
             var fechaHoy = new Date().toISOString().slice(0,10);
             textoArchivoDescargaMaster = "=========================================================================\r\n";
             textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES DE HORMIGON ESPECIFICO POR TAREA\r\n";
+            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
             textoArchivoDescargaMaster += "Componente Analizado: " + estructuraSeleccionadaNombre + "\r\n";
             textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
             textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
@@ -420,16 +432,16 @@
         async function buscarPrecioML(termino) {
             try {
                 let r = await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(termino)}&condition=new&limit=4`);
-                let d = await r.json(); return d.results?.[0]?.price || 0;
+                let d = r.json(); return d.results?.[0]?.price || 0;
             } catch (e) { return 0; }
         }
 
         async function iniciarCotizadorML() {
             cambiarPantalla('pantalla-cotizador'); document.getElementById('precioMLReferencia').innerText = "Calculando...";
             let pCem = await buscarPrecioML("bolsa cemento 50kg loma negra"); if(pCem < 1000) pCem = 9800;
-            let mat = (globalBolsasCemento * pCem) * 2.65; 
-            if(globalViguetasCount > 0) { mat = mat * 1.95; } 
-            let final = mat + (globalM3Hormigon * 48000); 
+            let mat = (globalBolsasCemento * pCem) * 2.65; 
+            if(globalViguetasCount > 0) { mat = mat * 1.95; } 
+            let final = mat + (globalM3Hormigon * 48000); 
             document.getElementById('precioMLReferencia').innerText = "$ " + Math.round(final).toLocaleString('es-AR');
         }
 
@@ -439,8 +451,8 @@
 
             if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad de la obra."); return; }
 
-            document.getElementById('form-cotizador').style.display = 'none'; 
-            document.getElementById('btn-buscar-precios').style.display = 'none'; 
+            document.getElementById('form-cotizador').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'none'; 
             document.getElementById('loader-precios').style.display = 'block';
 
             try {
@@ -456,7 +468,7 @@
                 const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
 
                 const contenedor = document.getElementById('contenedor-dinamico-proveedores');
-                contenedor.innerHTML = ""; 
+                contenedor.innerHTML = ""; 
 
                 let htmlMat = "";
                 if (matData.length > 0) {
@@ -476,16 +488,7 @@
 
                 let htmlMo = "";
                 if (moData.length > 0) {
-                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ENCOFRADORES Y ESTRUCTURISTAS</div>`;
-                    moData.forEach(prov => {
-                        htmlMo += `
-                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
-                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
-                                <span style="font-size: 11px; color: #7A7A7A;">📍 Cobertura: ${prov.localidad}, ${prov.provincia}</span>
-                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Contactar Especialista</button>
-                            </div>`;
-                    });
-                    htmlMo += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Haces llenados de plateas, losas o vigas? Suscribite acá</a></div></div>`;
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;"></div>  Formularios de mano de obra habilitados en zona.</div>`;
                 } else {
                     htmlMo += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 MANO DE OBRA:<br>ZONA LIBRE</h3><p>No hay cuadrillas ni estructuristas registrados en tu localidad para este llenado.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Postularme Acá</a></div>`;
                 }
@@ -497,8 +500,8 @@
                 document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
             }
 
-            document.getElementById('form-cotizador').style.display = 'block'; 
-            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('form-cotizador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
             document.getElementById('btn-buscar-precios').style.display = 'block';
             cambiarPantalla('pantalla-precio-final');
         }

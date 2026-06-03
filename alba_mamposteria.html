@@ -83,7 +83,13 @@
             <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Mampostería y Revoques</h2></div>
             <div class="contenido-scroll">
                 <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Dimensiones del Muro</div>
+                    <div class="seccion-titulo">Tus Datos</div>
+                    <label>Tu Nombre y Apellido</label>
+                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
+                </div>
+
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Dimensions del Muro</div>
                     <div class="grid-2">
                         <div><label>Largo (m)</label><input type="number" id="largo" placeholder="0.00" step="0.1"></div>
                         <div><label>Alto (m)</label><input type="number" id="alto" placeholder="0.00" step="0.1"></div>
@@ -220,6 +226,7 @@
             document.getElementById('aberturas').value = "";
             document.getElementById('areaContrapiso').value = "";
             document.getElementById('areaCarpeta').value = "";
+            document.getElementById('nombreUsuario').value = "";
             cambiarPantalla('pantalla-formulario');
             alert("¡Obra de albañilería borrada! Todos los casilleros regresaron a cero.");
         }
@@ -233,6 +240,10 @@
             var tipoLadrillo = document.getElementById('tipoLadrillo').value;
             var revoqueInt = document.getElementById('revoqueInt').value; 
             var revoqueExt = document.getElementById('revoqueExt').value;
+
+            if(largo === 0 || alto === 0) { alert("Socio, completá las dimensiones del muro primero."); return; }
+
+            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
 
             var areaBrutaMuro = largo * alto; 
             var areaNetaMuro = Math.max(0, areaBrutaMuro - aberturas); 
@@ -310,7 +321,7 @@
             var lineaYeso = itemB_YesoBolsas > 0 ? `<li><span>Yeso Alfarero Interno (30kg)</span> <span class="destacado">${itemB_YesoBolsas} Bolsas</span></li>` : '' ;
             var lineaCemRevoque = itemB_CementoBolsas > 0 ? `<li><span>Cemento para Revoques (50kg)</span> <span class="destacado">${itemB_CementoBolsas} Bolsas</span></li>` : '';
             var lineaCalRevoque = itemB_CalBolsas > 0 ? `<li><span>Cal para Revoques (20kg)</span> <span class="destacado">${itemB_CalBolsas} Bolsas</span></li>` : '';
-            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaM3} m³</span></li>` : '';
+            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaRevoque} m³</span></li>` : '';
             var notaCerecita = revoqueExt === 'hidrofugo' ? '<li><span>Nota técnica para el Cliente:</span> <span style="font-size:11px; color:#27AE60; font-weight:bold;">Aislación Hidrófuga \"Cerecita\" incluida.</span></li>' : '';
 
             var htmlDesglose = `
@@ -357,7 +368,8 @@
 
             document.getElementById('contenedorDesgloseRubros').innerHTML = htmlDesglose;
 
-            textoPedidoWhatsAppMaster = "Hola! Solicito presupuesto consolidado para materiales de albañilería en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
+            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
             textoPedidoWhatsAppMaster += "- " + nombreLadrilloText + ": " + globalTotalLadrillos + " u.\n";
             if(globalTotalCementoBolsas > 0) textoPedidoWhatsAppMaster += "- Cemento Gris (50kg): " + globalTotalCementoBolsas + " bolsas\n";
             if(globalTotalCalBolsas > 0) textoPedidoWhatsAppMaster += "- Cal Hidráulica (20kg): " + globalTotalCalBolsas + " bolsas\n";
@@ -365,11 +377,12 @@
             if(itemC_CascoteM3 > 0) textoPedidoWhatsAppMaster += "- Cascote Molido: " + itemC_CascoteM3 + " m³\n";
             if(itemA_PegamentoKg > 0) textoPedidoWhatsAppMaster += "- Adhesivo Retak: " + itemA_PegamentoKg + " Kg\n";
             if(itemB_YesoBolsas > 0) textoPedidoWhatsAppMaster += "- Yeso Proyectado (30kg): " + itemB_YesoBolsas + " bolsas\n\n";
-            textoPedidoWhatsAppMaster += "Aguardamos cotización final puesta en obra. Saludos!";
+            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
 
             var fechaHoy = new Date().toISOString().slice(0,10);
             textoArchivoDescargaMaster = "=========================================================================\r\n";
             textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES DESGLOSADO POR ITEM DE OBRA\r\n";
+            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
             textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
             textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
             textoArchivoDescargaMaster += "ITEM 1: ELEVACION DE MUROS (" + nombreLadrilloText + ")\r\n";
@@ -420,7 +433,7 @@
 
         function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
             if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego activo."); return; }
-            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telephoneProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
             window.open(urlWhatsappNativa, '_blank');
         }
 

@@ -19,7 +19,7 @@
         @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
         .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
         .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
-        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; position: absolute; top: 36px; left: 0; width: 100%; height: calc(100% - 36px); background: #F4F5F7; z-index: 10; } 
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; height: calc(100% - 36px); position: relative; } 
         .pantalla.activa { display: flex; }
         .header-native, .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
         .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
@@ -81,6 +81,12 @@
             <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Construcción en Seco</h2></div>
             <div class="contenido-scroll">
                 
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Tus Datos</div>
+                    <label>Tu Nombre y Apellido</label>
+                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
+                </div>
+
                 <div class="tarjeta-blanca">
                     <div class="seccion-titulo">1. Tipo de Estructure</div>
                     <label>Elegir Tarea Constructiva</label>
@@ -226,6 +232,7 @@
             
             limpiarFormularioFisicoA0();
             document.getElementById('tipoSistema').value = "tabique_std";
+            document.getElementById('nombreUsuario').value = "";
             alternarCamposSeco();
             cambiarPantalla('pantalla-formulario');
             alert("¡Obra borrada! Todos los casilleros regresaron a cero.");
@@ -237,6 +244,8 @@
             var sistema = document.getElementById('tipoSistema').value;
 
             if(ancho === 0 || alto === 0) { alert("Socio, por favor completá las dimensiones para computar el material."); return; }
+
+            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
 
             var areaPlanta = ancho * alto;
             globalAreaSeco = areaPlanta;
@@ -330,7 +339,9 @@
 
             document.getElementById('contenedorDesgloseSeco').innerHTML = htmlSeco;
 
-            textoPedidoWhatsAppMaster = "Hola! Solicito presupuesto de materiales para armado de " + sistemaNombreEstructura + " en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
+            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
+            textoPedidoWhatsAppMaster += "Materiales para armado de " + sistemaNombreEstructura + ":\n";
             if(placasStd > 0) textoPedidoWhatsAppMaster += "- Placas Yeso Estándar: " + placasStd + " u.\n";
             if(placasRh > 0) textoPedidoWhatsAppMaster += "- Placas Yeso R.H. (Verdes): " + placasRh + " u.\n";
             if(montantes > 0) textoPedidoWhatsAppMaster += "- Perfiles Montantes (3m): " + montantes + " u.\n";
@@ -342,11 +353,12 @@
             if(t1 > 0) textoPedidoWhatsAppMaster += "- Tornillos T1: " + t1 + " u.\n";
             if(t2 > 0) textoPedidoWhatsAppMaster += "- Tornillos T2: " + t2 + " u.\n";
             if(fijacionesSolera > 0) textoPedidoWhatsAppMaster += "- Tarugos N°8: " + fijacionesSolera + " u.\n\n";
-            textoPedidoWhatsAppMaster += "Favor cotizar marcas comerciales puestas en obra. Muchas gracias!";
+            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
 
             var fechaHoy = new Date().toISOString().slice(0,10);
             textoArchivoDescargaMaster = "=========================================================================\r\n";
             textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES DE CONSTRUCCIÓN EN SECO\r\n";
+            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
             textoArchivoDescargaMaster += "Elemento Constructivo: " + sistemaNombreEstructura + "\r\n";
             textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
             textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
@@ -379,7 +391,7 @@
 
         function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
             if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego de materiales activo para despachar."); return; }
-            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telephoneProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
             window.open(urlWhatsappNativa, '_blank');
         }
 
@@ -415,7 +427,6 @@
                     supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_seco').eq('estado_suscripcion', 'activa')
                 ]);
 
-                // CORRECCIÓN CRÍTICA DE FILTRADO LOCAL DIRECTO
                 const matData = (resMateriales.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
                 const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
 

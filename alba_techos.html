@@ -16,7 +16,7 @@
         @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
         .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
         .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
-        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; position: absolute; top: 36px; left: 0; width: 100%; height: calc(100% - 36px); background: #F4F5F7; z-index: 10; } 
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; height: calc(100% - 36px); position: relative; } 
         .pantalla.activa { display: flex; }
         .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
         .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
@@ -68,6 +68,12 @@
         <div id="pantalla-formulario" class="pantalla activa">
             <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Cubiertas y Techos</h2></div>
             <div class="contenido-scroll">
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Tus Datos</div>
+                    <label>Tu Nombre y Apellido</label>
+                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
+                </div>
+
                 <div class="tarjeta-blanca">
                     <div class="seccion-titulo">Dimensiones en Planta</div>
                     <div class="grid-2">
@@ -179,6 +185,7 @@
             globalAreaReal = 0; globalTirantesMadera = 0; globalPerfilesMetalicos = 0; globalMachimbreM2 = 0; globalRollosAislante = 0; globalCantidadCubierta = 0; globalFijacionesCount = 0;
             textoPedidoWhatsAppMaster = ""; textoArchivoDescargaMaster = "";
             document.getElementById('ancho').value = ""; document.getElementById('largo').value = "";
+            document.getElementById('nombreUsuario').value = "";
             document.getElementById('tipoCubierta').value = "chapa_sinu"; document.getElementById('tipoEstructura').value = "madera";
             cambiarPantalla('pantalla-formulario');
             alert("¡Obra de techos borrada!");
@@ -191,6 +198,8 @@
             var tipoEstructura = document.getElementById('tipoEstructura').value;
 
             if(ancho === 0 || largo === 0) { alert("Socio, por favor ingresá las dimensiones."); return; }
+
+            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
 
             var areaReal = (ancho * largo) * 1.15; globalAreaReal = areaReal;
             var tirantesMadera = 0; var perfilesMetal = 0; var machimbreM2 = 0; var rollosAislante = 0; var cantCubierta = 0; var cantFijaciones = 0;
@@ -247,18 +256,21 @@
 
             document.getElementById('contenedorDesgloseTechos').innerHTML = htmlTechos;
 
-            textoPedidoWhatsAppMaster = "Hola! Solicito cotización de materiales de techos para cubiertas de " + cubiertaSeleccionadaNombre + " en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
+            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
+            textoPedidoWhatsAppMaster += "Materiales de techos para cubiertas de " + cubiertaSeleccionadaNombre + ":\n";
             textoPedidoWhatsAppMaster += "- Cubierta Principal (" + cubiertaSeleccionadaNombre + "): " + cantCubierta + " u.\n";
             if(tirantesMadera > 0) textoPedidoWhatsAppMaster += "- Tirante Madera 2x6: " + tirantesMadera + " u.\n";
             if(machimbreM2 > 0) textoPedidoWhatsAppMaster += "- Machimbre Pino 1/2: " + machimbreM2 + " m²\n";
             if(perfilesMetal > 0) textoPedidoWhatsAppMaster += "- Perfil C 100x50x2mm: " + perfilesMetal + " varillas\n";
             if(rollosAislante > 0) textoPedidoWhatsAppMaster += "- Lana Vidrio 50mm c/Alu: " + rollosAislante + " rollos\n";
             textoPedidoWhatsAppMaster += "- Tornillos/Clavos de fijación: " + cantFijaciones + " u.\n\n";
-            textoPedidoWhatsAppMaster += "Favor indicar stock y precio de entrega. Saludos!";
+            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
 
             var fechaHoy = new Date().toISOString().slice(0,10);
             textoArchivoDescargaMaster = "=========================================================================\r\n";
             textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO TÉCNICO DE COBERTURAS Y TECHADOS AUDITADO\r\n";
+            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
             textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
             textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
             textoArchivoDescargaMaster += "RUBRO 1: CUBIERTA EXTERIOR CLIMATICA\r\n";
@@ -281,7 +293,7 @@
 
         function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
             if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego técnico para enviar."); return; }
-            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telephoneProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
             window.open(urlWhatsappNativa, '_blank');
         }
 

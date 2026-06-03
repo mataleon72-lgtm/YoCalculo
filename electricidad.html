@@ -96,12 +96,18 @@
             <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Instalación Eléctrica</h2></div>
             <div class="contenido-scroll">
                 <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Tus Datos</div>
+                    <label>Tu Nombre y Apellido</label>
+                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
+                </div>
+
+                <div class="tarjeta-blanca">
                     <div class="seccion-titulo">Alturas de Obra (m)</div>
                     <div class="grid-2">
-                        <div><label>Techo</label><input type="number" id="altTecho" value="2.80" step="0.1"></div>
-                        <div><label>Llaves de luz</label><input type="number" id="altLlaves" value="1.10" step="0.1"></div>
-                        <div><label>Tomas bajos</label><input type="number" id="altTomasB" value="0.40" step="0.1"></div>
-                        <div><label>Tomas altos</label><input type="number" id="altTomasM" value="1.20" step="0.1"></div>
+                        <div><label>Techo</label><input type="number" id="altTecho" placeholder="0.00" step="0.1"></div>
+                        <div><label>Llaves de luz</label><input type="number" id="altLlaves" placeholder="0.00" step="0.1"></div>
+                        <div><label>Tomas bajos</label><input type="number" id="altTomasB" placeholder="0.00" step="0.1"></div>
+                        <div><label>Tomas altos</label><input type="number" id="altTomasM" placeholder="0.00" step="0.1"></div>
                     </div>
                 </div>
 
@@ -265,6 +271,11 @@
             textoPedidoWhatsAppMaster = "";
             textoArchivoDescargaMaster = "";
             document.getElementById('contador').innerText = "0";
+            document.getElementById('nombreUsuario').value = "";
+            document.getElementById('altTecho').value = "";
+            document.getElementById('altLlaves').value = "";
+            document.getElementById('altTomasB').value = "";
+            document.getElementById('altTomasM').value = "";
             limpiarFormularioFisicoA0();
             cambiarPantalla('pantalla-plano');
             alert("¡Obra borrada! Todos los formularios regresaron a cero.");
@@ -322,6 +333,8 @@
 
         function computarTotal() {
             if(ambientes.length === 0) { alert("Socio, tocá un ambiente en el plano primero para configurarlo."); return; }
+
+            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
 
             globalLuces = 0; globalLlaves = 0; globalTBajos = 0; globalTAltos = 0; globalTEspeciales = 0;
             globalMetrosCano = 0; globalBombaHp = 0;
@@ -418,7 +431,8 @@
             document.getElementById('listaSeguridad').innerHTML = htmlSeguridad;
 
             // PREPARACIÓN DE TEXTOS COMERCIALES MASTER
-            textoPedidoWhatsAppMaster = "Hola! Solicito cotización para materiales eléctricos calculados en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
+            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
             textoPedidoWhatsAppMaster += "- Cable 1.5mm² (Rojo/Cel/Blanco): " + (cableIlumRojo+cableIlumCeleste+cableIlumBlanco) + "m total\n";
             textoPedidoWhatsAppMaster += "- Cable 2.5mm² (Marron/Celeste): " + (cableTomasMarron+cableTomasCeleste) + "m total\n";
             textoPedidoWhatsAppMaster += "- Caño Rígido PVC 3/4 (Tiras 3m): " + tirasCanoRigido + " u.\n";
@@ -426,11 +440,12 @@
             textoPedidoWhatsAppMaster += "- Cajas Octogonales Techo: " + cajasHexagonales + " u.\n";
             textoPedidoWhatsAppMaster += "- Tomacorrientes 10A/20A completos: " + (totalBocasEstructurales+modulosEspeciales) + " u.\n";
             textoPedidoWhatsAppMaster += "- Disyuntor Diferencial 40A + Térmicas correspondientes del pliego.\n\n";
-            textoPedidoWhatsAppMaster += "Quedo atento a su presupuesto puesto en obra. Saludos!";
+            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
 
             var fechaHoy = new Date().toISOString().slice(0,10);
             textoArchivoDescargaMaster = "=========================================================================\r\n";
             textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES ELECTRICOS COMPLETO\r\n";
+            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
             textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
             textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
             textoArchivoDescargaMaster += "Cables 1.5mm² Red Eléctrica\t\t\t\t" + (cableIlumRojo+cableIlumCeleste+cableIlumBlanco) + " m\r\n";
@@ -454,7 +469,7 @@
 
         function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
             if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego activo."); return; }
-            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telephoneProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
             window.open(urlWhatsappNativa, '_blank');
         }
 
@@ -525,16 +540,7 @@
 
                 let htmlMo = "";
                 if (moData.length > 0) {
-                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ELECTRICISTAS MATRICULADOS</div>`;
-                    moData.forEach(prov => {
-                        htmlMo += `
-                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
-                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
-                                <span style="font-size: 11px; color: #7A7A7A;">📍 Cobertura: ${prov.localidad}, ${prov.provincia}</span>
-                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Contactar Electricista</button>
-                            </div>`;
-                    });
-                    htmlMo += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos instalador? Registrate acá</a></div></div>`;
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;"></div>   Formularios de mano de obra habilitados en la zona.</div>`;
                 } else {
                     htmlMo += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 MANO DE OBRA:<br>ZONA LIBRE</h3><p>No hay electricistas matriculados en esta zona.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Postularme Acá</a></div>`;
                 }
