@@ -19,38 +19,18 @@
             box-sizing: border-box;
         }
         .header-nativo { 
-            background-color: #4B4B4D; 
-            color: #FFFFFF; 
-            padding: 15px; 
-            display: flex; 
-            align-items: center; 
-            flex-shrink: 0;
-            box-sizing: border-box;
-            width: 100%;
+            background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; 
+            align-items: center; flex-shrink: 0; box-sizing: border-box; width: 100%;
         }
         .btn-back-nativo { 
-            background: transparent; 
-            border: none; 
-            color: #FFFFFF; 
-            font-size: 20px; 
-            cursor: pointer; 
-            padding: 0; 
-            margin-right: 15px; 
+            background: transparent; border: none; color: #FFFFFF; font-size: 20px; 
+            cursor: pointer; padding: 0; margin-right: 15px; 
         }
         .header-title { 
-            font-size: 16px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            margin: 0; 
-            letter-spacing: 0.5px;
-            color: #FFFFFF !important;
+            font-size: 16px; font-weight: 800; text-transform: uppercase; 
+            margin: 0; letter-spacing: 0.5px; color: #FFFFFF !important;
         }
-        .contenido-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+        .contenido-scroll { flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; }
         .campo-grupo { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 12px; font-weight: 700; color: #4B4B4D; text-transform: uppercase; }
         select, input {
@@ -108,28 +88,8 @@
                 <select id="select-provincia">
                     <option value="Buenos Aires">Buenos Aires</option>
                     <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
-                    <option value="Catamarca">Catamarca</option>
-                    <option value="Chaco">Chaco</option>
-                    <option value="Chubut">Chubut</option>
                     <option value="Córdoba">Córdoba</option>
-                    <option value="Corrientes">Corrientes</option>
-                    <option value="Entre Ríos">Entre Ríos</option>
-                    <option value="Formosa">Formosa</option>
-                    <option value="Jujuy">Jujuy</option>
-                    <option value="La Pampa">La Pampa</option>
-                    <option value="La Rioja">La Rioja</option>
-                    <option value="Mendoza">Mendoza</option>
-                    <option value="Misiones">Misiones</option>
-                    <option value="Neuquén">Neuquén</option>
-                    <option value="Río Negro">Río Negro</option>
-                    <option value="Salta">Salta</option>
-                    <option value="San Juan">San Juan</option>
-                    <option value="San Luis">San Luis</option>
-                    <option value="Santa Cruz">Santa Cruz</option>
                     <option value="Santa Fe">Santa Fe</option>
-                    <option value="Santiago del Estero">Santiago del Estero</option>
-                    <option value="Tierra del Fuego">Tierra del Fuego</option>
-                    <option value="Tucumán">Tucumán</option>
                 </select>
             </div>
 
@@ -145,9 +105,9 @@
     </div>
 
     <script>
-        // CREDENCIALES NUEVAS ACTUALIZADAS
+        // LA LLAVE ORIGINAL DE SUPABASE (LA QUE SÍ FUNCIONA)
         const SUPABASE_URL = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_XZr_j6pyUa9HtTWgKhbu9A_ohEgpcIo';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function limpiarTexto(txt) {
@@ -157,7 +117,7 @@
 
         async function buscarManoObra() {
             const contenedor = document.getElementById('resultados');
-            contenedor.innerHTML = '<p style="text-align:center; color:#7A7A7A; font-weight:bold;">Conectando con Supabase...</p>';
+            contenedor.innerHTML = '<p style="text-align:center; color:#7A7A7A; font-weight:bold;">Conectando...</p>';
 
             const rubroSeleccionado = document.getElementById('select-oficio').value;
             const localidadIngresada = limpiarTexto(document.getElementById('input-localidad').value);
@@ -166,6 +126,7 @@
             if(!localidadIngresada) { alert("Por favor, ingresá una localidad."); contenedor.innerHTML=""; return; }
 
             try {
+                // ACÁ ESTÁ LA CORRECCIÓN: rubro_especifico bien escrito
                 const { data: proveedores, error } = await supabaseClient
                     .from('proveedores')
                     .select('*')
@@ -206,7 +167,7 @@
 
             } catch (err) {
                 console.error("Error:", err);
-                contenedor.innerHTML = '<p class="zona-libre" style="color:red; font-size:12px;">Error al conectar con la base de datos.</p>';
+                contenedor.innerHTML = `<p class="zona-libre" style="color:red; font-size:12px;">Error: ${JSON.stringify(err)}</p>`;
             }
         }
     </script>
