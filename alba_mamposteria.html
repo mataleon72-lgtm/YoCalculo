@@ -51,7 +51,6 @@
         li { padding: 8px 0; border-bottom: 1px solid #F4F5F7; font-size: 13px; color: #4B4B4D; display: flex; justify-content: space-between; align-items: center; }
         li:last-child { border-bottom: none; }
         .destacado { font-weight: bold; font-size: 13px; color: #000; background: #F4F5F7; padding: 2px 6px; border-radius: 4px; }
-        .subitem-titulo { font-size: 11px; font-weight: 800; color: #7A7A7A; text-transform: uppercase; margin-top: 10px; margin-bottom: 4px; letter-spacing: 0.5px; background: #FFF; padding: 2px 0; }
         .cargando-presupuesto { text-align: center; padding: 40px 20px; display: none; }
         .spinner { border: 4px solid #EBEBEB; border-top: 4px solid #FBDD23; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -183,7 +182,7 @@
                         <option value="Tucumán">Tucumán</option>
                     </select>
                     <label>Localidad / Ciudad de la Obra</label>
-                    <input type="text" id="localidad_obra" placeholder="Ej: Morón, San Francisco, San Rafael...">
+                    <input type="text" id="localidad_obra" placeholder="Ej: Villa Raffo, Caseros, Ramos Mejía...">
                 </div>
             </div>
             <div class="cargando-presupuesto" id="loader-precios"><div class="spinner"></div><h3 style="color: #4B4B4D; margin-top:0;">Buscando en la nube...</h3></div>
@@ -198,7 +197,8 @@
             <div class="contenido-scroll" id="contenedor-dinamico-proveedores"></div>
         </div>
     </div>
-<script>
+
+    <script>
         const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
         const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
@@ -420,6 +420,23 @@
             cambiarPantalla('pantalla-resultados');
         }
 
+        function descargarArchivoTextoPedido() {
+            if(!textoArchivoDescargaMaster) { alert("Socio, no hay datos calculados."); return; }
+            var blob = new Blob([textoArchivoDescargaMaster], {type: "text/plain;charset=utf-8"});
+            var elementoLink = document.createElement('a');
+            elementoLink.href = URL.createObjectURL(blob);
+            elementoLink.download = "YoCalculo_Pliego_Materiales.txt";
+            document.body.appendChild(elementoLink);
+            elementoLink.click();
+            document.body.removeChild(elementoLink);
+        }
+
+        function enviarPedidoPorWhatsApp(telefono, nombreCorralon) {
+            if(!textoPedidoWhatsAppMaster) { alert("No hay datos para cotizar."); return; }
+            var urlBase = "https://api.whatsapp.com/send?phone=" + telefono + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            window.open(urlBase, '_blank');
+        }
+
         async function buscarPrecioML(termino) {
             try {
                 let respuesta = await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(termino)}&condition=new&limit=4`);
@@ -468,9 +485,10 @@
             document.getElementById('loader-precios').style.display = 'block';
 
             try {
+                // Modificado para coincidir con la palabra exacta 'profesionales' de tu base de datos
                 const [resMateriales, resManoObra] = await Promise.all([
                     supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mamposteria').eq('estado_suscripcion', 'activa'),
-                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_mamposteria').eq('estado_suscripcion', 'activa')
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'profesionales').eq('estado_suscripcion', 'activa')
                 ]);
 
                 function limpiarAcentos(texto) {
@@ -508,7 +526,7 @@
 
                 let htmlMo = "";
                 if (moData.length > 0) {
-                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;"></div> 👷‍♂️ ALBAÑILES Y CONSTRUCTORES</div>`;
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ALBAÑILES Y CONSTRUCTORES</div>`;
                     moData.forEach(prov => {
                         htmlMo += `
                             <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
