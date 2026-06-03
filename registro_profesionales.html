@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YOCALCULO - Buscador de Profesionales</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e24">
+    <link rel="apple-touch-icon" href="icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .contenedor-app-yocalculo { position: relative; width: 100%; height: 100%; max-width: 432px; max-height: 960px; aspect-ratio: 432 / 960; background-color: #F4F5F7; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0px 10px 40px rgba(0,0,0,0.8); flex-shrink: 0; }
+        @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
+        .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
+        .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; position: absolute; top: 36px; left: 0; width: 100%; height: calc(100% - 36px); background: #F4F5F7; z-index: 10; } 
+        .pantalla.activa { display: flex; }
+        .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
+        .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;}
+        .contenido-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 110px; box-sizing: border-box; }
+        .tarjeta-blanca { background-color: #FFFFFF; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #EBEBEB; box-sizing: border-box; border-radius: 6px; }
+        .seccion-titulo { color: #4B4B4D; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 0; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F4F5F7; padding-bottom: 4px; }
+        label { color: #7A7A7A; display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="text"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 16px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; }
+        input[type="text"]:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
+        .barra-inferior { position: absolute; bottom: 0; left: 0; width: 100%; background: #FFFFFF; padding: 15px 20px; box-sizing: border-box; border-top: 1px solid #E5E5E5; z-index: 5; flex-shrink: 0; }
+        .btn-amarillo-fijo { width: 100%; padding: 15px; background-color: #FBDD23; color: #4B4B4D; border: none; font-weight: 900; font-size: 16px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; border-radius: 6px;}
+        .btn-amarillo-fijo:active { transform: scale(0.98); }
+        .btn-whatsapp-proveedor { width: 100%; padding: 12px; background-color: #2ECC71; color: #FFFFFF; border: none; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; border-radius: 4px; display: block; text-decoration: none; box-sizing: border-box; margin-top: 10px; }
+        .btn-whatsapp-proveedor:active { background-color: #27AE60; }
+        .banner-publicitario-estatico-fijo { position: absolute; bottom: 76px; left: 15px; width: calc(100% - 30px); aspect-ratio: 1080 / 450; background-color: #EBEBEB; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px dashed #7A7A7A; box-sizing: border-box; z-index: 4; }
+        .tag-publicidad { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7A7A7A; font-weight: bold; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .scroll-con-publicidad-fija { padding-bottom: 240px; }
+        .cargando-presupuesto { text-align: center; padding: 40px 20px; display: none; }
+        .spinner { border: 4px solid #EBEBEB; border-top: 4px solid #FBDD23; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tarjeta-zona-libre { background-color: #1e1e24; color: #FFFFFF; padding: 20px 15px; border-radius: 8px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border: 2px solid #FBDD23; margin-bottom: 15px; }
+        .tarjeta-zona-libre h3 { margin-top: 0; color: #FBDD23; font-size: 18px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;}
+        .tarjeta-zona-libre p { font-size: 13px; line-height: 1.4; color: #EBEBEB; margin-bottom: 12px; text-align: left; }
+        .btn-mp-proveedor { background-color: #FBDD23; color: #1e1e24; border: none; padding: 14px; width: 100%; font-size: 14px; font-weight: 900; text-transform: uppercase; border-radius: 6px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; transition: transform 0.1s;}
+        .btn-mp-proveedor:active { transform: scale(0.98); }
+        .tarjeta-upsell { background-color: #F4F5F7; border: 1px dashed #7A7A7A; padding: 12px; border-radius: 6px; margin-top: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="contenedor-app-yocalculo">
+        <div class="status-bar">
+            <div class="status-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.93 4.93l2.83 2.83"></path><path d="M16.24 16.24l2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="M4.93 19.07l2.83-2.83"></path><path d="M16.24 7.76l2.83-2.83"></path></svg>
+                <span style="color: #4B4B4D; font-weight: 800; font-size: 10px; letter-spacing: 0.5px;">ESTÁS TRABAJANDO EN LÍNEA...</span>
+            </div>
+            <div class="status-right">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text></svg>
+            </div>
+        </div>
+
+        <div id="pantalla-filtro" class="pantalla activa">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Filtro de Profesionales</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija" id="form-buscador">
+                <div class="tarjeta-blanca" style="background-color: #4B4B4D; color: white;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 16px; color: #FBDD23;">Red Técnica y de Gestión</h3>
+                    <p style="margin: 0; font-size: 12px; color: #EBEBEB;">Buscá profesionales verificados para dirección, proyectos, firmas de planos y relevamientos.</p>
+                </div>
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">¿Qué perfil buscás?</div>
+                    <label>Especialidad</label>
+                    <select id="rubro_profesional">
+                        <option value="arquitecto">Arquitecto / Arquitecta</option>
+                        <option value="ingeniero">Ingeniero / Ingeniera Civil</option>
+                        <option value="maestro_mayor">Maestro Mayor de Obra (MMO)</option>
+                    </select>
+
+                    <div class="seccion-titulo" style="margin-top: 20px;">Ubicación de la obra</div>
+                    <label>Provincia</label>
+                    <select id="provincia_obra">
+                        <option value="Buenos Aires">Buenos Aires</option>
+                        <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
+                        <option value="Catamarca">Catamarca</option>
+                        <option value="Chaco">Chaco</option>
+                        <option value="Chubut">Chubut</option>
+                        <option value="Córdoba">Córdoba</option>
+                        <option value="Corrientes">Corrientes</option>
+                        <option value="Entre Ríos">Entre Ríos</option>
+                        <option value="Formosa">Formosa</option>
+                        <option value="Jujuy">Jujuy</option>
+                        <option value="La Pampa">La Pampa</option>
+                        <option value="La Rioja">La Rioja</option>
+                        <option value="Mendoza">Mendoza</option>
+                        <option value="Misiones">Misiones</option>
+                        <option value="Neuquén">Neuquén</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Salta">Salta</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Luis">San Luis</option>
+                        <option value="Santa Cruz">Santa Cruz</option>
+                        <option value="Santa Fe">Santa Fe</option>
+                        <option value="Santiago del Estero">Santiago del Estero</option>
+                        <option value="Tierra del Fuego">Tierra del Fuego</option>
+                        <option value="Tucumán">Tucumán</option>
+                    </select>
+                    <label>Localidad / Ciudad de la Obra</label>
+                    <input type="text" id="localidad_obra" placeholder="Ej: Morón, San Francisco, San Rafael...">
+                </div>
+            </div>
+            <div class="cargando-presupuesto" id="loader-precios"><div class="spinner"></div><h3 style="color: #4B4B4D; margin-top:0;">Buscando profesionales...</h3></div>
+            <div class="banner-publicitario-estatico-fijo">
+                <span class="tag-publicidad">Auspiciante Local</span>
+                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+            <div class="barra-inferior" id="btn-buscar-profesionales"><button class="btn-amarillo-fijo" onclick="mostrarProfesionales()">Buscar en mi Zona</button></div>
+        </div>
+
+        <div id="pantalla-resultados" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-filtro')">&#10094;</button><h2 class="header-title">Profesionales de la Red</h2></div>
+            <div class="contenido-scroll" id="contenedor-dinamico-profesionales"></div>
+        </div>
+    </div>
+
+    <script>
+        const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
+        const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInZiZSI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
+
+        function cambiarPantalla(id) { document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa')); document.getElementById(id).classList.add('activa'); }
+
+        function contactarProfesional(telefono, nombre) {
+            var msg = "Hola " + nombre + "! Vi tu perfil verificado en YOCALCULO. Te contacto porque necesito asesoramiento técnico/presupuesto para una obra en mi zona.";
+            window.open("https://api.whatsapp.com/send?phone=" + telefono + "&text=" + encodeURIComponent(msg), '_blank');
+        }
+
+        async function mostrarProfesionales() {
+            var rubro_seleccionado = document.getElementById('rubro_profesional').value;
+            var provincia_seleccionada = document.getElementById('provincia_obra').value;
+            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase();
+
+            if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad para buscar."); return; }
+
+            document.getElementById('form-buscador').style.display = 'none'; 
+            document.getElementById('btn-buscar-profesionales').style.display = 'none'; 
+            document.getElementById('loader-precios').style.display = 'block';
+
+            try {
+                // Buscamos en la tabla de proveedores filtrando por la categoría de "profesionales"
+                const { data, error } = await supabaseClient
+                    .from('proveedores')
+                    .select('*')
+                    .eq('categoria', 'profesionales')
+                    .eq('rubro_especifico', rubro_seleccionado)
+                    .eq('estado_suscripcion', 'activa');
+
+                if (error) throw error;
+
+                const profData = (data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+
+                const contenedor = document.getElementById('contenedor-dinamico-profesionales');
+                contenedor.innerHTML = ""; 
+
+                let htmlProf = "";
+                if (profData.length > 0) {
+                    htmlProf += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ESTUDIOS Y PROFESIONALES DESTACADOS</div>`;
+                    profData.forEach(p => {
+                        htmlProf += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 15px; color: #1e1e24; display:block;">${p.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A; display:block; margin-top:2px;">📍 Cobertura: ${p.localidad}, ${p.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="contactarProfesional('${p.telefono_whatsapp}', '${p.nombre_comercial}')">📱 Contactar por WhatsApp</button>
+                            </div>`;
+                    });
+                    htmlProf += `<div class="tarjeta-upsell"><a href="proveedores.html" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos Profesional? Suscribite a la Red acá</a></div></div>`;
+                } else {
+                    htmlProf += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 ZONA LIBRE DE COMPETENCIA</h3><p>No hay profesionales de este rubro registrados en esta zona todavía.</p><a href="proveedores.html" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Registrarme en esta Zona</a></div>`;
+                }
+
+                contenedor.innerHTML = htmlProf;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('contenedor-dinamico-profesionales').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error al conectar con la red.</p>`;
+            }
+
+            document.getElementById('form-buscador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('btn-buscar-profesionales').style.display = 'block';
+            cambiarPantalla('pantalla-resultados');
+        }
+    </script>
+</body>
+</html>

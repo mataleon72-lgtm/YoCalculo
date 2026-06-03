@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YOCALCULO - Hormigón Estructural</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e24">
+    <link rel="apple-touch-icon" href="icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .contenedor-app-yocalculo { position: relative; width: 100%; height: 100%; max-width: 432px; max-height: 960px; aspect-ratio: 432 / 960; background-color: #F4F5F7; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0px 10px 40px rgba(0,0,0,0.8); flex-shrink: 0; }
+        @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
+        .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
+        .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; position: absolute; top: 36px; left: 0; width: 100%; height: calc(100% - 36px); background: #F4F5F7; z-index: 10; } 
+        .pantalla.activa { display: flex; }
+        .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
+        .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;}
+        .contenido-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 110px; box-sizing: border-box; }
+        .tarjeta-blanca { background-color: #FFFFFF; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #EBEBEB; box-sizing: border-box; border-radius: 6px; }
+        .tarjeta-ml { background-color: #FFFDF0; border: 2px solid #FBDD23; text-align: center; }
+        .seccion-titulo { color: #4B4B4D; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 0; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F4F5F7; padding-bottom: 4px; }
+        label { color: #7A7A7A; display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="number"], input[type="text"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 16px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
+        .barra-inferior { position: absolute; bottom: 0; left: 0; width: 100%; background: #FFFFFF; padding: 15px 20px; box-sizing: border-box; border-top: 1px solid #E5E5E5; z-index: 5; flex-shrink: 0; }
+        .btn-amarillo-fijo { width: 100%; padding: 15px; background-color: #FBDD23; color: #4B4B4D; border: none; font-weight: 900; font-size: 16px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; border-radius: 6px;}
+        .btn-amarillo-fijo:active { filter: brightness(0.95); transform: scale(0.98); }
+        .btn-gris-fijo { width: 100%; padding: 15px; background-color: #4B4B4D; color: #FBDD23; border: none; font-weight: 900; font-size: 15px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px; border-radius: 6px;}
+        .btn-gris-fijo:active { transform: scale(0.98); }
+        .btn-descargar-archivo-txt { width: 100%; padding: 12px; background-color: #7A7A7A; color: #FFFFFF; border: none; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-align: center; box-sizing: border-box; margin-bottom: 15px; display: block; border-radius: 4px; transition: background-color 0.1s; }
+        .btn-descargar-archivo-txt:active { background-color: #636363; }
+        .btn-whatsapp-proveedor { width: 100%; padding: 12px; background-color: #2ECC71; color: #FFFFFF; border: none; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; border-radius: 4px; display: block; text-decoration: none; box-sizing: border-box; margin-top: 10px; }
+        .btn-whatsapp-proveedor:active { background-color: #27AE60; }
+        .banner-publicitario-estatico-fijo { position: absolute; bottom: 76px; left: 15px; width: calc(100% - 30px); aspect-ratio: 1080 / 450; background-color: #EBEBEB; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px dashed #7A7A7A; box-sizing: border-box; z-index: 4; }
+        .banner-publicitario-estatico-fijo img { width: 100%; height: 100%; object-fit: cover; }
+        .tag-publicidad { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7A7A7A; font-weight: bold; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .scroll-con-publicidad-fija { padding-bottom: 240px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 10px 0; border-bottom: 1px solid #EBEBEB; font-size: 13px; color: #4B4B4D; display: flex; justify-content: space-between; align-items: center; }
+        li:last-child { border-bottom: none; }
+        .destacado { font-weight: bold; font-size: 14px; color: #000; background: #F4F5F7; padding: 2px 8px; border-radius: 4px; }
+        .tarjeta-zona-libre { background-color: #1e1e24; color: #FFFFFF; padding: 24px 20px; border-radius: 8px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.3); border: 2px solid #FBDD23; margin-top: 10px; }
+        .tarjeta-zona-libre h3 { margin-top: 0; color: #FBDD23; font-size: 20px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;}
+        .tarjeta-zona-libre p { font-size: 14px; line-height: 1.5; color: #EBEBEB; margin-bottom: 15px; text-align: left; }
+        .tarjeta-zona-libre ul { list-style: none; padding: 0; margin: 0 0 25px 0; text-align: left; }
+        .tarjeta-zona-libre li { color: #FFFFFF; font-size: 13px; margin-bottom: 10px; border-bottom: none; display: flex; align-items: flex-start; padding: 0; line-height: 1.4;}
+        .tarjeta-zona-libre li::before { content: '✔'; color: #FBDD23; margin-right: 10px; font-weight: bold; font-size: 14px;}
+        .btn-mp-proveedor { background-color: #FBDD23; color: #1e1e24; border: none; padding: 16px; width: 100%; font-size: 15px; font-weight: 900; text-transform: uppercase; border-radius: 6px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; transition: transform 0.1s;}
+        .btn-mp-proveedor:active { transform: scale(0.98); }
+        .tarjeta-upsell { background-color: #F4F5F7; border: 1px dashed #7A7A7A; padding: 15px; border-radius: 6px; margin-top: 20px; text-align: center; }
+        .tarjeta-upsell p { margin: 0 0 10px 0; font-size: 13px; color: #4B4B4D; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="contenedor-app-yocalculo">
+        <div class="status-bar">
+            <div class="status-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.93 4.93l2.83 2.83"></path><path d="M16.24 16.24l2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="M4.93 19.07l2.83-2.83"></path><path d="M16.24 7.76l2.83-2.83"></path></svg>
+                <span style="color: #4B4B4D; font-weight: 800; font-size: 10px; letter-spacing: 0.5px;">ESTÁS TRABAJANDO EN LÍNEA...</span>
+            </div>
+            <div class="status-right">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text></svg>
+            </div>
+        </div>
+
+        <div id="pantalla-formulario" class="pantalla activa">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Hormigón Estructural</h2></div>
+            <div class="contenido-scroll">
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Dimensionamiento General</div>
+                    <label>Elemento Constructivo</label>
+                    <select id="tipoEstructura" onchange="ajustarCampos()">
+                        <option value="viga_fundacion">Vigas de Fundación (ML)</option>
+                        <option value="viga_encadenado">Vigas de Encadenado Superior (ML)</option>
+                        <option value="zapatas">Zapatas Aisladas (Cantidad)</option>
+                        <option value="platea">Platea de Hormigón con Malla</option>
+                        <option value="losa_armada">Losa de Hormigón Armado (Maciza)</option>
+                        <option value="losa_viguetas">Losa Alivianada (Viguetas + EPS)</option>
+                    </select>
+                    
+                    <div id="bloque-dinamico-inputs">
+                        <label id="lbl1">Metros Lineales Totales</label>
+                        <input type="number" id="v1" placeholder="0.00" step="0.1">
+                        
+                        <label id="lbl2">Ancho de Sección (m)</label>
+                        <input type="number" id="v2" placeholder="0.00" step="0.05">
+                        
+                        <label id="lbl3">Alto de Sección (m)</label>
+                        <input type="number" id="v3" placeholder="0.00" step="0.05">
+                    </div>
+                </div>
+            </div>
+            <div class="barra-inferior"><button class="btn-amarillo-fijo" onclick="calcularHormigon()">Generar Cómputo</button></div>
+        </div>
+
+        <div id="pantalla-resultados" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-formulario')">&#10094;</button><h2 class="header-title">Lista de Materiales</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija">
+                <button class="btn-nuevo-calculo-banner" style="width: 100%; padding: 10px; background: transparent; border: 1px solid #7A7A7A; color: #7A7A7A; font-weight: bold; text-transform: uppercase; border-radius: 4px; margin-bottom: 10px; cursor: pointer;" onclick="reiniciarCalculo()">Nuevo Cálculo</button>
+                <button class="btn-descargar-archivo-txt" onclick="descargarArchivoTextoPedido()">💾 Descargar Listado (.TXT)</button>
+
+                <div id="contenedorDesgloseResultados"></div>
+            </div>
+            
+            <div class="banner-publicitario-estatico-fijo">
+                <span class="tag-publicidad">Auspiciante Local</span>
+                <div style="font-size: 15px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+
+            <div class="barra-inferior"><button class="btn-gris-fijo" onclick="iniciarCotizadorML()"><span style="font-size: 24px; line-height: 0; margin-right: 6px; font-weight: 900;">$</span> Cotizar en mi Zona</button></div>
+        </div>
+
+        <div id="pantalla-cotizador" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-resultados')">&#10094;</button><h2 class="header-title">Cotizador Inteligente</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija" id="form-cotizador">
+                <div class="tarjeta-blanca tarjeta-ml">
+                    <p style="font-size: 11px; color: #7A7A7A; margin-bottom: 5px; font-weight: 800;">VALOR DE REFERENCIA (MERCADO LIBRE AR)</p>
+                    <h2 id="precioMLReferencia" style="color: #4B4B4D; font-size: 32px; margin: 5px 0; font-family: 'Arial Black', sans-serif;">Calculando...</h2>
+                </div>
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Ubicación de la obra</div>
+                    <label>Provincia</label>
+                    <select id="provincia_obra">
+                        <option value="Buenos Aires">Buenos Aires</option>
+                        <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
+                        <option value="Catamarca">Catamarca</option>
+                        <option value="Chaco">Chaco</option>
+                        <option value="Chubut">Chubut</option>
+                        <option value="Córdoba">Córdoba</option>
+                        <option value="Corrientes">Corrientes</option>
+                        <option value="Entre Ríos">Entre Ríos</option>
+                        <option value="Formosa">Formosa</option>
+                        <option value="Jujuy">Jujuy</option>
+                        <option value="La Pampa">La Pampa</option>
+                        <option value="La Rioja">La Rioja</option>
+                        <option value="Mendoza">Mendoza</option>
+                        <option value="Misiones">Misiones</option>
+                        <option value="Neuquén">Neuquén</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Salta">Salta</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Luis">San Luis</option>
+                        <option value="Santa Cruz">Santa Cruz</option>
+                        <option value="Santa Fe">Santa Fe</option>
+                        <option value="Santiago del Estero">Santiago del Estero</option>
+                        <option value="Tierra del Fuego">Tierra del Fuego</option>
+                        <option value="Tucumán">Tucumán</option>
+                    </select>
+
+                    <label>Localidad / Ciudad de la Obra</label>
+                    <input type="text" id="localidad_obra" placeholder="Ej: Morón, San Francisco, San Rafael...">
+                </div>
+            </div>
+            <div class="cargando-presupuesto" id="loader-precios"><div class="spinner"></div><h3 style="color: #4B4B4D; margin-top:0;">Buscando en la nube...</h3></div>
+            
+            <div class="banner-publicitario-estatico-fijo">
+                <span class="tag-publicidad">Auspiciante Local</span>
+                <div style="font-size: 15px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+
+            <div class="barra-inferior" id="btn-buscar-precios"><button class="btn-amarillo-fijo" onclick="mostrarProveedores()">Buscar Proveedores</button></div>
+        </div>
+
+        <div id="pantalla-precio-final" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-cotizador')">✕</button><h2 class="header-title">Proveedores Locales</h2></div>
+            <div class="contenido-scroll" id="contenedor-dinamico-proveedores"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONEXIÓN EXCLUSIVA E INDEPENDIENTE CON EL MOTOR SUPABASE ---
+        const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
+        const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
+        
+        // Variables globales
+        var globalM3Hormigon = 0; var globalBolsasCemento = 0; var globalArenaM3 = 0; var globalPiedraM3 = 0;
+        var globalHierro10Bars = 0; var globalHierro8Bars = 0; var globalHierro6Bars = 0; var globalHierro42Mallas = 0;
+        var globalAlambreKg = 0; var globalViguetasCount = 0; var globalLadrillosEps = 0; var globalMallasSima = 0;
+        var textoPedidoWhatsAppMaster = ""; var textoArchivoDescargaMaster = ""; var estructuraSeleccionadaNombre = "";
+
+        function cambiarPantalla(id) { document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa')); document.getElementById(id).classList.add('activa'); }
+        
+        function ajustarCampos() {
+            const t = document.getElementById('tipoEstructura').value;
+            limpiarFormularioFisicoA0();
+            if(t === 'viga_fundacion' || t === 'viga_encadenado') {
+                document.getElementById('lbl1').innerText = "Metros Lineales Totales (m)";
+                document.getElementById('lbl2').innerText = "Ancho de la Viga (m) - Ej: 0.15";
+                document.getElementById('lbl3').innerText = "Alto de la Viga (m) - Ej: 0.30";
+                document.getElementById('v3').style.display = "block";
+                document.getElementById('lbl3').style.display = "block";
+            } else if(t === 'zapatas') {
+                document.getElementById('lbl1').innerText = "Cantidad de Zapatas (u.)";
+                document.getElementById('lbl2').innerText = "Lado de la Base Cuadrada (m)";
+                document.getElementById('lbl3').innerText = "Espesor / Altura Base (m)";
+                document.getElementById('v3').style.display = "block";
+                document.getElementById('lbl3').style.display = "block";
+            } else if(t === 'platea') {
+                document.getElementById('lbl1').innerText = "Superficie Total (m²)";
+                document.getElementById('lbl2').innerText = "Espesor de la Platea (m) - Ej: 0.10";
+                document.getElementById('lbl3').innerText = "No Requerido para Platea (Poner 0)";
+                document.getElementById('v3').style.display = "none";
+                document.getElementById('lbl3').style.display = "none";
+                document.getElementById('v3').value = "0";
+            } else if(t === 'losa_armada') {
+                document.getElementById('lbl1').innerText = "Superficie Total (m²)";
+                document.getElementById('lbl2').innerText = "Espesor de Losa Maciza (m) - Ej: 0.12";
+                document.getElementById('lbl3').innerText = "No Requerido para Losa (Poner 0)";
+                document.getElementById('v3').style.display = "none";
+                document.getElementById('lbl3').style.display = "none";
+                document.getElementById('v3').value = "0";
+            } else if(t === 'losa_viguetas') {
+                document.getElementById('lbl1').innerText = "Luz / Largo de Viguetas (m)";
+                document.getElementById('lbl2').innerText = "Ancho de la Losa (m)";
+                document.getElementById('lbl3').innerText = "Capa de Compresión (m) - Estándar: 0.05";
+                document.getElementById('v3').style.display = "block";
+                document.getElementById('lbl3').style.display = "block";
+            }
+        }
+
+        function limpiarFormularioFisicoA0() {
+            document.getElementById('v1').value = "";
+            document.getElementById('v2').value = "";
+            document.getElementById('v3').value = "";
+        }
+
+        function reiniciarCalculo() {
+            globalM3Hormigon = 0; globalBolsasCemento = 0; globalArenaM3 = 0; globalPiedraM3 = 0;
+            globalHierro10Bars = 0; globalHierro8Bars = 0; globalHierro6Bars = 0; globalHierro42Mallas = 0;
+            globalAlambreKg = 0; globalViguetasCount = 0; globalLadrillosEps = 0; globalMallasSima = 0;
+            textoPedidoWhatsAppMaster = ""; textoArchivoDescargaMaster = "";
+            limpiarFormularioFisicoA0();
+            document.getElementById('tipoEstructura').value = "viga_fundacion";
+            ajustarCampos();
+            cambiarPantalla('pantalla-formulario');
+            alert("¡Obra de hormigón borrada! Casilleros listos en cero absoluto.");
+        }
+
+        function calcularHormigon() {
+            const tipo = document.getElementById('tipoEstructura').value;
+            const v1 = parseFloat(document.getElementById('v1').value) || 0;
+            const v2 = parseFloat(document.getElementById('v2').value) || 0;
+            const v3 = parseFloat(document.getElementById('v3').value) || 0;
+
+            if(v1 === 0 || v2 === 0) { alert("Socio, completá las medidas del componente estructural primero."); return; }
+
+            var m3 = 0; var bolsasCemento = 0; var arenaM3 = 0; var piedraM3 = 0;
+            var hierro10 = 0; var hierro8 = 0; var hierro6 = 0; var mallas42 = 0; var mallasSima = 0;
+            var alambre = 0; var viguetas = 0; var ladrillosEps = 0;
+
+            const dosifCementoBag = 7; const dosifArena = 0.65; const dosifPiedra = 0.65;
+
+            if (tipo === 'viga_fundacion' || tipo === 'viga_encadenado') {
+                estructuraSeleccionadaNombre = (tipo === 'viga_fundacion') ? "Vigas de Fundación" : "Vigas de Encadenado";
+                m3 = v1 * v2 * v3;
+                hierro10 = Math.ceil((v1 * 4) / 12); 
+                var cantEstribos = v1 / 0.20;
+                var perimetroEstribo = ((v2 + v3) * 2) + 0.10; 
+                hierro6 = Math.ceil((cantEstribos * perimetroEstribo) / 12);
+                alambre = Math.ceil(v1 * 0.1); 
+            } 
+            else if (tipo === 'zapatas') {
+                estructuraSeleccionadaNombre = "Zapatas Aisladas";
+                m3 = v1 * (v2 * v2) * v3; 
+                var varillasPorZapata = Math.ceil(v2 / 0.15) * 2;
+                hierro10 = Math.ceil((v1 * varillasPorZapata * v2) / 12);
+                alambre = Math.ceil(v1 * 0.5);
+            } 
+            else if (tipo === 'platea') {
+                estructuraSeleccionadaNombre = "Platea de Fundación";
+                m3 = v1 * v2; 
+                mallasSima = Math.ceil(v1 / 13);
+                alambre = Math.ceil(mallasSima * 0.8);
+            } 
+            else if (tipo === 'losa_armada') {
+                estructuraSeleccionadaNombre = "Losa Maciza H°A°";
+                m3 = v1 * v2; 
+                var metrosHierroM2 = (1 / 0.15) * 2 * 2; 
+                hierro8 = Math.ceil((v1 * metrosHierroM2) / 12);
+                alambre = Math.ceil(v1 * 0.15);
+            } 
+            else if (tipo === 'losa_viguetas') {
+                estructuraSeleccionadaNombre = "Losa de Viguetas y EPS";
+                var areaLosa = v1 * v2;
+                m3 = areaLosa * v3; 
+                viguetas = Math.ceil(v2 * 1.6); 
+                ladrillosEps = Math.ceil(areaLosa * 5); 
+                mallas42 = Math.ceil(areaLosa / 14); 
+            }
+
+            bolsasCemento = Math.ceil(m3 * dosifCementoBag * 1.08);
+            arenaM3 = parseFloat((m3 * dosifArena * 1.08).toFixed(2));
+            piedraM3 = parseFloat((m3 * dosifPiedra * 1.08).toFixed(2));
+
+            globalM3Hormigon = m3; globalBolsasCemento = bolsasCemento; globalArenaM3 = arenaM3; globalPiedraM3 = piedraM3;
+            globalHierro10Bars = hierro10; globalHierro8Bars = hierro8; globalHierro6Bars = hierro6; globalHierro42Mallas = mallas42;
+            globalAlambreKg = alambre; globalViguetasCount = viguetas; globalLadrillosEps = ladrillosEps; globalMallasSima = mallasSima;
+
+            var htmlRubros = `
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo" style="color: #27AE60;">RUBRO 1: ÁRIDOS Y LIGANTES (HORMIGÓN DE LLENADO)</div>
+                    <ul>
+                        <li><span>Cemento Portland Standard (Bolsas 50kg)</span> <span class="destacado">${bolsasCemento} u.</span></li>
+                        <li><span>Arena Clasificada de Obra</span> <span class="destacado">${arenaM3} m³</span></li>
+                        <li><span>Piedra Partida Conza 1-3</span> <span class="destacado">${piedraM3} m³</span></li>
+                        <li><span>Volumen Teórico de Mezcla resultante</span> <span class="destacado" style="background:#FFFDF0;">${m3.toFixed(2)} m³</span></li>
+                    </ul>
+                </div>
+            `;
+
+            if (hierro10 > 0 || hierro8 > 0 || hierro6 > 0 || mallasSima > 0 || mallas42 > 0) {
+                htmlRubros += `
+                    <div class="tarjeta-blanca">
+                        <div class="seccion-titulo" style="color: #C0392B;">RUBRO 2: ARMADURAS Y ACERO ESTRUCTURAL</div>
+                        <ul>
+                            ${hierro10 > 0 ? `<li><span>Barras de Hierro Aletado Ø 10mm (Tiras de 12m)</span> <span class="destacado">${hierro10} u.</span></li>` : ''}
+                            ${hierro8 > 0 ? `<li><span>Barras de Hierro Aletado Ø 8mm (Tiras de 12m)</span> <span class="destacado">${hierro8} u.</span></li>` : ''}
+                            ${hierro6 > 0 ? `<li><span>Barras de Hierro Estribo Ø 6mm (Tiras de 12m)</span> <span class="destacado">${hierro6} u.</span></li>` : ''}
+                            ${mallasSima > 0 ? `<li><span>Malla Electrosoldada Sima Q92 (2.42x6m Ø 6mm)</span> <span class="destacado">${mallasSima} u.</span></li>` : ''}
+                            ${mallas42 > 0 ? `<li><span>Malla de Reparto Electrosoldada (2.4x6m Ø 4.2mm)</span> <span class="destacado">${mallas42} u.</span></li>` : ''}
+                            ${alambre > 0 ? `<li><span>Alambre Recocido Negro Nº 16 (Ataduras)</span> <span class="destacado">${alambre} Kg</span></li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (viguetas > 0 || ladrillosEps > 0) {
+                htmlRubros += `
+                    <div class="tarjeta-blanca">
+                        <div class="seccion-titulo" style="color: #2980B9;">RUBRO 3: COMPONENTES DE ALIVIANADO (TECHO)</div>
+                        <ul>
+                            <li><span>Viguetas Pretensadas Forjadas (Luz acumulada ${v1}m)</span> <span class="destacado">${viguetas} u.</span></li>
+                            <li><span>Bloques de Techo Poliestireno Expandido (EPS Isopor)</span> <span class="destacado">${ladrillosEps} u.</span></li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            document.getElementById('contenedorDesgloseResultados').innerHTML = htmlRubros;
+
+            textoPedidoWhatsAppMaster = "Hola! Solicito cotización para componentes estructurales de " + estructuraSeleccionadaNombre + " calculados en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster += "- Cemento Portland (50kg): " + bolsasCemento + " bolsas\n";
+            textoPedidoWhatsAppMaster += "- Arena de Cava: " + arenaM3 + " m³\n";
+            textoPedidoWhatsAppMaster += "- Piedra Partida: " + piedraM3 + " m³\n";
+            if(hierro10 > 0) textoPedidoWhatsAppMaster += "- Hierro Ø 10mm (12m): " + hierro10 + " varillas\n";
+            if(hierro8 > 0) textoPedidoWhatsAppMaster += "- Hierro Ø 8mm (12m): " + hierro8 + " varillas\n";
+            if(hierro6 > 0) textoPedidoWhatsAppMaster += "- Hierro Ø 6mm (12m): " + hierro6 + " varillas\n";
+            if(mallasSima > 0) textoPedidoWhatsAppMaster += "- Mallas Sima Ø 6mm: " + mallasSima + " paños\n";
+            if(viguetas > 0) {
+                textoPedidoWhatsAppMaster += "- Viguetas Pretensadas: " + viguetas + " u.\n";
+                textoPedidoWhatsAppMaster += "- Ladrillos EPS Isopor: " + ladrillosEps + " u.\n";
+                textoPedidoWhatsAppMaster += "- Mallas Reparto 4.2mm: " + mallas42 + " paños\n";
+            }
+            if(alambre > 0) textoPedidoWhatsAppMaster += "- Alambre Recocido N°16: " + alambre + " Kg\n";
+            textoPedidoWhatsAppMaster += "\nFavor detallar costo de envío a la obra. Gracias!";
+
+            var fechaHoy = new Date().toISOString().slice(0,10);
+            textoArchivoDescargaMaster = "=========================================================================\r\n";
+            textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES DE HORMIGON ESPECIFICO POR TAREA\r\n";
+            textoArchivoDescargaMaster += "Componente Analizado: " + estructuraSeleccionadaNombre + "\r\n";
+            textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
+            textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
+            textoArchivoDescargaMaster += "RUBRO 1: MATERIALES AGREGADOS Y DOSIFICACION\r\n";
+            textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+            textoArchivoDescargaMaster += "CONCEPTO / MATERIAL\t\t\t\t\tCANTIDAD\r\n";
+            textoArchivoDescargaMaster += "Cemento Portland Compuesto (Bolsas 50kg)\t\t\t" + bolsasCemento + " Bolsas\r\n";
+            textoArchivoDescargaMaster += "Arena Clasificada Limpia de Cantera\t\t\t\t" + arenaM3 + " m³\r\n";
+            textoArchivoDescargaMaster += "Piedra Partida Granítica 1-3\t\t\t\t" + piedraM3 + " m³\r\n";
+
+            if (hierro10 > 0 || hierro8 > 0 || hierro6 > 0 || mallasSima > 0) {
+                textoArchivoDescargaMaster += "\r\nRUBRO 2: ELEMENTOS DE FIJACION Y ACEROS ALETADOS\r\n";
+                textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+                if(hierro10 > 0) textoArchivoDescargaMaster += "Hierro Conformado Acindar Ø 10mm (Barras 12m)\t\t" + hierro10 + " Varillas\r\n";
+                if(hierro8 > 0) textoArchivoDescargaMaster += "Hierro Conformado Acindar Ø 8mm (Barras 12m)\t\t" + hierro8 + " Varillas\r\n";
+                if(hierro6 > 0) textoArchivoDescargaMaster += "Hierro de Estribado Mecánico Ø 6mm (Barras 12m)\t\t" + hierro6 + " Varillas\r\n";
+                if(mallasSima > 0) textoArchivoDescargaMaster += "Malla Electrosoldada Sima Ø 6mm (2.42x6m)\t\t\t" + mallasSima + " Paños\r\n";
+                if(alambre > 0) textoArchivoDescargaMaster += "Alambre Recocido Negro N° 16 (Ataduras)\t\t\t" + alambre + " Kg\r\n";
+            }
+
+            if (viguetas > 0 || ladrillosEps > 0) {
+                textoArchivoDescargaMaster += "\r\nRUBRO 3: COMPONENTES DE TECHADOS Y ALIVIANADOS\r\n";
+                textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+                textoArchivoDescargaMaster += "Viguetas Pretensadas Reforzadas de Alta Luz\t\t\t" + viguetas + " Pasos\r\n";
+                textoArchivoDescargaMaster += "Bloques de Techo EPS (Poliestireno Alivianado)\t\t" + ladrillosEps + " Unidades\r\n";
+                textoArchivoDescargaMaster += "Malla Electrosoldada de Reparto (Paños 2.4x6m Ø 4.2)\t" + mallas42 + " Paños\r\n";
+            }
+            
+            textoArchivoDescargaMaster += "\r\n=========================================================================\r\n";
+            textoArchivoDescargaMaster += "* Archivo tabulado listo para auditar el factor de desperdicio en Excel *\r\n";
+            textoArchivoDescargaMaster += "=========================================================================\r\n";
+
+            cambiarPantalla('pantalla-resultados');
+        }
+
+        function descargarArchivoTextoPedido() {
+            if(textoArchivoDescargaMaster === "") { alert("Socio, no hay cómputo estructural para descargar."); return; }
+            var blob = new Blob([textoArchivoDescargaMaster], { type: "text/plain;charset=utf-8" });
+            var elementoEnlace = document.createElement("a");
+            elementoEnlace.href = URL.createObjectURL(blob);
+            elementoEnlace.download = "YoCalculo_Pliego_Hormigon_" + new Date().toISOString().slice(0,10) + ".txt";
+            document.body.appendChild(elementoEnlace); elementoEnlace.click(); document.body.removeChild(elementoEnlace);
+        }
+
+        function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
+            if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego de materiales activo para enviar."); return; }
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            window.open(urlWhatsappNativa, '_blank');
+        }
+
+        async function buscarPrecioML(termino) {
+            try {
+                let r = await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(termino)}&condition=new&limit=4`);
+                let d = await r.json(); return d.results?.[0]?.price || 0;
+            } catch (e) { return 0; }
+        }
+
+        async function iniciarCotizadorML() {
+            cambiarPantalla('pantalla-cotizador'); document.getElementById('precioMLReferencia').innerText = "Calculando...";
+            let pCem = await buscarPrecioML("bolsa cemento 50kg loma negra"); if(pCem < 1000) pCem = 9800;
+            let mat = (globalBolsasCemento * pCem) * 2.65; 
+            if(globalViguetasCount > 0) { mat = mat * 1.95; } 
+            let final = mat + (globalM3Hormigon * 48000); 
+            document.getElementById('precioMLReferencia').innerText = "$ " + Math.round(final).toLocaleString('es-AR');
+        }
+
+        async function mostrarProveedores() {
+            var provincia_seleccionada = document.getElementById('provincia_obra').value;
+            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase();
+
+            if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad de la obra."); return; }
+
+            document.getElementById('form-cotizador').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'none'; 
+            document.getElementById('loader-precios').style.display = 'block';
+
+            try {
+                const [resMateriales, resManoObra] = await Promise.all([
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'hormigon').eq('estado_suscripcion', 'activa'),
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_hormigon').eq('estado_suscripcion', 'activa')
+                ]);
+
+                if (resMateriales.error) throw resMateriales.error;
+                if (resManoObra.error) throw resManoObra.error;
+
+                const matData = (resMateriales.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+                const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+
+                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
+                contenedor.innerHTML = ""; 
+
+                let htmlMat = "";
+                if (matData.length > 0) {
+                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">¼ HORMIGONERAS Y ACOPIOS DESTACADOS</div>`;
+                    matData.forEach(prov => {
+                        htmlMat += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
+                            </div>`;
+                    });
+                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos proveedor de hierros o mixer? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni hormigoneras destacadas en tu zona para presupuestar este pliego.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
+                }
+
+                let htmlMo = "";
+                if (moData.length > 0) {
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ENCOFRADORES Y ESTRUCTURISTAS</div>`;
+                    moData.forEach(prov => {
+                        htmlMo += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Cobertura: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Contactar Especialista</button>
+                            </div>`;
+                    });
+                    htmlMo += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Haces llenados de plateas, losas o vigas? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMo += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 MANO DE OBRA:<br>ZONA LIBRE</h3><p>No hay cuadrillas ni estructuristas registrados en tu localidad para este llenado.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Postularme Acá</a></div>`;
+                }
+
+                contenedor.innerHTML = htmlMat + htmlMo;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
+            }
+
+            document.getElementById('form-cotizador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'block';
+            cambiarPantalla('pantalla-precio-final');
+        }
+    </script>
+</body>
+</html>

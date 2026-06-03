@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YOCALCULO - Mampostería</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e24">
+    <link rel="apple-touch-icon" href="icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .contenedor-app-yocalculo { position: relative; width: 100%; height: 100%; max-width: 432px; max-height: 960px; aspect-ratio: 432 / 960; background-color: #F4F5F7; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0px 10px 40px rgba(0,0,0,0.8); flex-shrink: 0; }
+        @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
+        .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
+        .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; height: calc(100% - 36px); position: relative; } 
+        .pantalla.activa { display: flex; }
+        .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
+        .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;}
+        .contenido-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 110px; box-sizing: border-box; }
+        .tarjeta-blanca { background-color: #FFFFFF; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #EBEBEB; box-sizing: border-box; border-radius: 6px; }
+        .tarjeta-ml { background-color: #FFFDF0; border: 2px solid #FBDD23; text-align: center; }
+        .seccion-titulo { color: #4B4B4D; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 0; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F4F5F7; padding-bottom: 4px; }
+        label { color: #7A7A7A; display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="number"], input[type="text"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 16px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .barra-inferior { position: absolute; bottom: 0; left: 0; width: 100%; background: #FFFFFF; padding: 15px 20px; box-sizing: border-box; border-top: 1px solid #E5E5E5; z-index: 5; flex-shrink: 0; }
+        .btn-amarillo-fijo { width: 100%; padding: 15px; background-color: #FBDD23; color: #4B4B4D; border: none; font-weight: 900; font-size: 16px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; border-radius: 6px;}
+        .btn-amarillo-fijo:active { filter: brightness(0.95); transform: scale(0.98); }
+        .btn-gris-fijo { width: 100%; padding: 15px; background-color: #4B4B4D; color: #FBDD23; border: none; font-weight: 900; font-size: 15px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px; border-radius: 6px;}
+        .btn-gris-fijo:active { transform: scale(0.98); }
+        
+        .btn-descargar-archivo-txt { width: 100%; padding: 12px; background-color: #7A7A7A; color: #FFFFFF; border: none; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-align: center; box-sizing: border-box; margin-bottom: 15px; display: block; border-radius: 4px; transition: background-color 0.1s; }
+        .btn-descargar-archivo-txt:active { background-color: #636363; }
+
+        .btn-whatsapp-proveedor { width: 100%; padding: 12px; background-color: #2ECC71; color: #FFFFFF; border: none; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; border-radius: 4px; display: block; text-decoration: none; box-sizing: border-box; margin-top: 10px; }
+        .btn-whatsapp-proveedor:active { background-color: #27AE60; }
+
+        .banner-publicitario-estatico-fijo { position: absolute; bottom: 76px; left: 15px; width: calc(100% - 30px); aspect-ratio: 1080 / 450; background-color: #EBEBEB; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px dashed #7A7A7A; box-sizing: border-box; z-index: 4; }
+        .scroll-con-publicidad-fija { padding-bottom: 240px; }
+
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 8px 0; border-bottom: 1px solid #F4F5F7; font-size: 13px; color: #4B4B4D; display: flex; justify-content: space-between; align-items: center; }
+        li:last-child { border-bottom: none; }
+        .destacado { font-weight: bold; font-size: 13px; color: #000; background: #F4F5F7; padding: 2px 6px; border-radius: 4px; }
+        .subitem-titulo { font-size: 11px; font-weight: 800; color: #7A7A7A; text-transform: uppercase; margin-top: 10px; margin-bottom: 4px; letter-spacing: 0.5px; background: #FFF; padding: 2px 0; }
+        .cargando-presupuesto { text-align: center; padding: 40px 20px; display: none; }
+        .spinner { border: 4px solid #EBEBEB; border-top: 4px solid #FBDD23; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .tarjeta-zona-libre { background-color: #1e1e24; color: #FFFFFF; padding: 20px 15px; border-radius: 8px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border: 2px solid #FBDD23; margin-bottom: 15px; }
+        .tarjeta-zona-libre h3 { margin-top: 0; color: #FBDD23; font-size: 18px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;}
+        .tarjeta-zona-libre p { font-size: 13px; line-height: 1.4; color: #EBEBEB; margin-bottom: 12px; text-align: left; }
+        .tarjeta-zona-libre ul { list-style: none; padding: 0; margin: 0 0 15px 0; text-align: left; }
+        .tarjeta-zona-libre li { color: #FFFFFF; font-size: 12px; margin-bottom: 8px; border-bottom: none; display: flex; align-items: flex-start; padding: 0; line-height: 1.3;}
+        .tarjeta-zona-libre li::before { content: '✔'; color: #FBDD23; margin-right: 8px; font-weight: bold;}
+        .btn-mp-proveedor { background-color: #FBDD23; color: #1e1e24; border: none; padding: 14px; width: 100%; font-size: 14px; font-weight: 900; text-transform: uppercase; border-radius: 6px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; transition: transform 0.1s;}
+        .btn-mp-proveedor:active { transform: scale(0.98); }
+        .tarjeta-upsell { background-color: #F4F5F7; border: 1px dashed #7A7A7A; padding: 12px; border-radius: 6px; margin-top: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="contenedor-app-yocalculo">
+        <div class="status-bar">
+            <div class="status-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.93 4.93l2.83 2.83"></path><path d="M16.24 16.24l2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="M4.93 19.07l2.83-2.83"></path><path d="M16.24 7.76l2.83-2.83"></path></svg>
+                <span style="color: #4B4B4D; font-weight: 800; font-size: 10px; letter-spacing: 0.5px;">ESTÁS TRABAJANDO EN LÍNEA...</span>
+            </div>
+            <div class="status-right">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text></svg>
+            </div>
+        </div>
+
+        <div id="pantalla-formulario" class="pantalla activa">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Mampostería y Revoques</h2></div>
+            <div class="contenido-scroll">
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Dimensiones del Muro</div>
+                    <div class="grid-2">
+                        <div><label>Largo (m)</label><input type="number" id="largo" placeholder="0.00" step="0.1"></div>
+                        <div><label>Alto (m)</label><input type="number" id="alto" placeholder="0.00" step="0.1"></div>
+                    </div>
+                    <label>Aberturas a descontar (m² totales)</label><input type="number" id="aberturas" placeholder="0.00" step="0.1">
+                </div>
+                
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Pisos e Infraestructura Inferior</div>
+                    <div class="grid-2">
+                        <div><label>Área Contrapiso (m²)</label><input type="number" id="areaContrapiso" placeholder="0.00"></div>
+                        <div><label>Área Carpeta (m²)</label><input type="number" id="areaCarpeta" placeholder="0.00"></div>
+                    </div>
+                </div>
+
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Materialidad</div>
+                    <label>Tipo de Mampuesto</label>
+                    <select id="tipoLadrillo">
+                        <option value="hueco_18">Ladrillo Hueco 18x19x33 cm (Muro de 18)</option>
+                        <option value="hueco_12">Ladrillo Hueco 12x19x33 cm (Muro de 12)</option>
+                        <option value="hueco_8">Ladrillo Hueco 8x19x33 cm (Tabique de 8)</option>
+                        <option value="bloque_19">Bloque de Hormigón 19x19x39 cm</option>
+                        <option value="retak_15">Ladrillo H° Celular Retak 15x25x50 cm</option>
+                    </select>
+                    <label>Tratamiento Cara Interior</label>
+                    <select id="revoqueInt">
+                        <option value="tradicional">Grueso + Fino Tradicional</option>
+                        <option value="yeso">Monocapa al Yeso Alisado</option>
+                        <option value="ninguno">Sin Revoque / Junta Tomada</option>
+                    </select>
+                    <label>Tratamiento Cara Exterior</label>
+                    <select id="revoqueExt">
+                        <option value="hidrofugo">Cerecita + Grueso + Fino Hidrófugo</option>
+                        <option value="tradicional">Grueso + Fino Tradicional</option>
+                        <option value="ninguno">Sin Revoque Exterior</option>
+                    </select>
+                </div>
+            </div>
+            <div class="barra-inferior"><button class="btn-amarillo-fijo" onclick="calcularMamposteria()">Generar Cómputo</button></div>
+        </div>
+
+        <div id="pantalla-resultados" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-formulario')">&#10094;</button><h2 class="header-title">Lista de Materiales</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija">
+                <button class="btn-nuevo-calculo-banner" style="width: 100%; padding: 10px; background: transparent; border: 1px solid #7A7A7A; color: #7A7A7A; font-weight: bold; text-transform: uppercase; border-radius: 4px; margin-bottom: 10px; cursor: pointer;" onclick="reiniciarCalculo()">Nuevo Cálculo</button>
+                <button class="btn-descargar-archivo-txt" onclick="descargarArchivoTextoPedido()">💾 Descargar Listado (.TXT)</button>
+                <div id="contenedorDesgloseRubros"></div>
+            </div>
+            <div class="banner-publicitario-estatico-fijo">
+                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+            <div class="barra-inferior"><button class="btn-gris-fijo" onclick="iniciarCotizadorML()"><span style="font-size: 24px; line-height: 0; margin-right: 6px; font-weight: 900;">$</span> Cotizar en mi Zona</button></div>
+        </div>
+
+        <div id="pantalla-cotizador" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-resultados')">&#10094;</button><h2 class="header-title">Cotizador Inteligente</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija" id="form-cotizador">
+                <div class="tarjeta-blanca tarjeta-ml">
+                    <p style="font-size: 11px; color: #7A7A7A; margin-bottom: 5px; font-weight: 800;">VALOR DE REFERENCIA (MERCADO LIBRE AR)</p>
+                    <h2 id="precioMLReferencia" style="color: #4B4B4D; font-size: 32px; margin: 5px 0; font-family: 'Arial Black', sans-serif;">Calculando...</h2>
+                    <p style="font-size: 10px; color: #7A7A7A; margin: 0;">*Costos de materiales promedio + Mano de obra base</p>
+                </div>
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Ubicación de la obra</div>
+                    <label>Provincia</label>
+                    <select id="provincia_obra">
+                        <option value="Buenos Aires">Buenos Aires</option>
+                        <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
+                        <option value="Catamarca">Catamarca</option>
+                        <option value="Chaco">Chaco</option>
+                        <option value="Chubut">Chubut</option>
+                        <option value="Córdoba">Córdoba</option>
+                        <option value="Corrientes">Corrientes</option>
+                        <option value="Entre Ríos">Entre Ríos</option>
+                        <option value="Formosa">Formosa</option>
+                        <option value="Jujuy">Jujuy</option>
+                        <option value="La Pampa">La Pampa</option>
+                        <option value="La Rioja">La Rioja</option>
+                        <option value="Mendoza">Mendoza</option>
+                        <option value="Misiones">Misiones</option>
+                        <option value="Neuquén">Neuquén</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Salta">Salta</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Luis">San Luis</option>
+                        <option value="Santa Cruz">Santa Cruz</option>
+                        <option value="Santa Fe">Santa Fe</option>
+                        <option value="Santiago del Estero">Santiago del Estero</option>
+                        <option value="Tierra del Fuego">Tierra del Fuego</option>
+                        <option value="Tucumán">Tucumán</option>
+                    </select>
+                    <label>Localidad / Ciudad de la Obra</label>
+                    <input type="text" id="localidad_obra" placeholder="Ej: Morón, San Francisco, San Rafael...">
+                </div>
+            </div>
+            <div class="cargando-presupuesto" id="loader-precios"><div class="spinner"></div><h3 style="color: #4B4B4D; margin-top:0;">Buscando en la nube...</h3></div>
+            <div class="banner-publicitario-estatico-fijo">
+                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+            <div class="barra-inferior" id="btn-buscar-precios"><button class="btn-amarillo-fijo" onclick="mostrarProveedores()">Buscar Proveedores</button></div>
+        </div>
+
+        <div id="pantalla-precio-final" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-cotizador')">✕</button><h2 class="header-title">Proveedores Locales</h2></div>
+            <div class="contenido-scroll" id="contenedor-dinamico-proveedores"></div>
+        </div>
+    </div>
+<script>
+        // --- 1. CONEXIÓN EXCLUSIVA E INDEPENDIENTE CON EL MOTOR SUPABASE ---
+        const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
+        const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
+
+        // Variables globales de acumulación comercial consolidadas
+        var globalTotalLadrillos = 0; var globalTotalCementoBolsas = 0; var globalTotalCalBolsas = 0;
+        var globalTotalArenaM3 = 0; var globalTotalCascoteM3 = 0; var globalTotalPegamentoKg = 0;
+        var globalTotalYesoBolsas = 0; var globalAreaNetaMuro = 0;
+        var nombreLadrilloBusqueda = ""; var textoPedidoWhatsAppMaster = ""; var textoArchivoDescargaMaster = "";
+        
+        function cambiarPantalla(id) { 
+            var pantallas = document.querySelectorAll('.pantalla');
+            for (var i = 0; i < pantallas.length; i++) { pantallas[i].classList.remove('activa'); }
+            document.getElementById(id).classList.add('activa'); 
+        }
+
+        function reiniciarCalculo() {
+            globalTotalLadrillos = 0; globalTotalCementoBolsas = 0; globalTotalCalBolsas = 0;
+            globalTotalArenaM3 = 0; globalTotalCascoteM3 = 0; globalTotalPegamentoKg = 0;
+            globalTotalYesoBolsas = 0; globalAreaNetaMuro = 0;
+            textoPedidoWhatsAppMaster = ""; textoArchivoDescargaMaster = "";
+            document.getElementById('largo').value = "";
+            document.getElementById('alto').value = "";
+            document.getElementById('aberturas').value = "";
+            document.getElementById('areaContrapiso').value = "";
+            document.getElementById('areaCarpeta').value = "";
+            cambiarPantalla('pantalla-formulario');
+            alert("¡Obra de albañilería borrada! Todos los casilleros regresaron a cero.");
+        }
+
+        function calcularMamposteria() {
+            var largo = parseFloat(document.getElementById('largo').value) || 0; 
+            var alto = parseFloat(document.getElementById('alto').value) || 0;
+            var aberturas = parseFloat(document.getElementById('aberturas').value) || 0; 
+            var areaContrapiso = parseFloat(document.getElementById('areaContrapiso').value) || 0;
+            var areaCarpeta = parseFloat(document.getElementById('areaCarpeta').value) || 0;
+            var tipoLadrillo = document.getElementById('tipoLadrillo').value;
+            var revoqueInt = document.getElementById('revoqueInt').value; 
+            var revoqueExt = document.getElementById('revoqueExt').value;
+
+            var areaBrutaMuro = largo * alto; 
+            var areaNetaMuro = Math.max(0, areaBrutaMuro - aberturas); 
+            globalAreaNetaMuro = areaNetaMuro;
+
+            var selector = document.getElementById("tipoLadrillo");
+            var nombreLadrilloText = selector.options[selector.selectedIndex].text.split(' (')[0];
+
+            var itemA_Ladrillos = 0;
+            if(tipoLadrillo === "hueco_18" || tipoLadrillo === "hueco_12" || tipoLadrillo === "hueco_8") { itemA_Ladrillos = Math.ceil(areaNetaMuro * 16 * 1.05); }
+            else if(tipoLadrillo === "bloque_19") { itemA_Ladrillos = Math.ceil(areaNetaMuro * 13.5 * 1.05); }
+            else if(tipoLadrillo === "retak_15") { itemA_Ladrillos = Math.ceil(areaNetaMuro * 8 * 1.05); }
+            nombreLadrilloBusqueda = nombreLadrilloText;
+
+            var itemA_CementoBolsas = 0; var itemA_CalBolsas = 0; var itemA_ArenaM3 = 0; var itemA_PegamentoKg = 0;
+            if(tipoLadrillo === "retak_15") {
+                itemA_PegamentoKg = Math.ceil(areaNetaMuro * 6 * 1.05);
+            } else {
+                var volAsiento = areaNetaMuro * 0.015;
+                itemA_CementoBolsas = Math.ceil((volAsiento * 120 * 1.05) / 50);
+                itemA_CalBolsas = Math.ceil((volAsiento * 240 * 1.05) / 20);
+                itemA_ArenaM3 = parseFloat((volAsiento * 1.15 * 1.05).toFixed(2));
+            }
+
+            var itemB_CementoBolsas = 0; var itemB_CalBolsas = 0; var itemB_ArenaM3 = 0; var itemB_YesoBolsas = 0;
+            if(revoqueInt === "tradicional") {
+                var volG_Int = areaBrutaMuro * 0.015; var volF_Int = areaBrutaMuro * 0.005;
+                itemB_CementoBolsas += Math.ceil((volG_Int * 100) / 50) + Math.ceil((volF_Int * 60) / 50);
+                itemB_CalBolsas += Math.ceil((volG_Int * 200) / 20) + Math.ceil((volF_Int * 240) / 20);
+                itemB_ArenaM3 += (volG_Int * 1.15) + (volF_Int * 1.05);
+            } else if(revoqueInt === "yeso") {
+                itemB_YesoBolsas = Math.ceil((areaBrutaMuro * 9.5 * 1.05) / 30);
+            }
+
+            if(revoqueExt === "hidrofugo") {
+                var volCer = areaBrutaMuro * 0.008;
+                itemB_CementoBolsas += Math.ceil((volCer * 450) / 50); itemB_ArenaM3 += (volCer * 1.1);
+                var volG_Ext = areaBrutaMuro * 0.015; var volF_Ext = areaBrutaMuro * 0.005;
+                itemB_CementoBolsas += Math.ceil((volG_Ext * 100) / 50) + Math.ceil((volF_Ext * 60) / 50);
+                itemB_CalBolsas += Math.ceil((volG_Ext * 200) / 20) + Math.ceil((volF_Ext * 240) / 20);
+                itemB_ArenaM3 += (volG_Ext * 1.15) + (volF_Ext * 1.05);
+            } else if(revoqueExt === "tradicional") {
+                var volG_ExtB = areaBrutaMuro * 0.015; var volF_ExtB = areaBrutaMuro * 0.005;
+                itemB_CementoBolsas += Math.ceil((volG_ExtB * 100) / 50) + Math.ceil((volF_ExtB * 60) / 50);
+                itemB_CalBolsas += Math.ceil((volG_ExtB * 200) / 20) + Math.ceil((volF_ExtB * 240) / 20);
+                itemB_ArenaM3 += (volG_ExtB * 1.15) + (volF_ExtB * 1.05);
+            }
+            itemB_ArenaM3 = parseFloat((itemB_ArenaM3 * 1.05).toFixed(2));
+
+            var itemC_CementoBolsas = 0; var itemC_CalBolsas = 0; var itemC_ArenaM3 = 0; var itemC_CascoteM3 = 0;
+            if(areaContrapiso > 0) {
+                var volContra = areaContrapiso * 0.10;
+                itemC_CementoBolsas = Math.ceil((volContra * 110 * 1.05) / 50);
+                itemC_CalBolsas = Math.ceil((volContra * 150 * 1.05) / 20);
+                itemC_ArenaM3 = parseFloat((volContra * 0.5 * 1.05).toFixed(2));
+                itemC_CascoteM3 = parseFloat((volContra * 0.9 * 1.05).toFixed(2));
+            }
+
+            var itemD_CementoBolsas = 0; var itemD_ArenaM3 = 0;
+            if(areaCarpeta > 0) {
+                var volCarp = areaCarpeta * 0.02;
+                itemD_CementoBolsas = Math.ceil((volCarp * 450 * 1.05) / 50);
+                itemD_ArenaM3 = parseFloat((volCarp * 1.15 * 1.05).toFixed(2));
+            }
+
+            globalTotalLadrillos = itemA_Ladrillos;
+            globalTotalCementoBolsas = itemA_CementoBolsas + itemB_CementoBolsas + itemC_CementoBolsas + itemD_CementoBolsas;
+            globalTotalCalBolsas = itemA_CalBolsas + itemB_CalBolsas + itemC_CalBolsas;
+            globalTotalArenaM3 = itemA_ArenaM3 + itemB_ArenaM3 + itemC_ArenaM3 + itemD_ArenaM3;
+
+            var lineaPegamento = itemA_PegamentoKg > 0 ? `<li><span>Adhesivo Retak Monocapa</span> <span class="destacado">${itemA_PegamentoKg} Kg</span></li>` : '';
+            var lineaCemAsiento = itemA_CementoBolsas > 0 ? `<li><span>Cemento para Asiento (50kg)</span> <span class="destacado">${itemA_CementoBolsas} Bolsas</span></li>` : '';
+            var lineaCalAsiento = itemA_CalBolsas > 0 ? `<li><span>Cal Hidráulica para Asiento (20kg)</span> <span class="destacado">${itemA_CalBolsas} Bolsas</span></li>` : '';
+            var lineaArenaAsiento = itemA_ArenaM3 > 0 ? `<li><span>Arena para Asiento</span> <span class="destacado">${itemA_ArenaM3} m³</span></li>` : '';
+            var lineaYeso = itemB_YesoBolsas > 0 ? `<li><span>Yeso Alfarero Interno (30kg)</span> <span class="destacado">${itemB_YesoBolsas} Bolsas</span></li>` : '' ;
+            var lineaCemRevoque = itemB_CementoBolsas > 0 ? `<li><span>Cemento para Revoques (50kg)</span> <span class="destacado">${itemB_CementoBolsas} Bolsas</span></li>` : '';
+            var lineaCalRevoque = itemB_CalBolsas > 0 ? `<li><span>Cal para Revoques (20kg)</span> <span class="destacado">${itemB_CalBolsas} Bolsas</span></li>` : '';
+            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaM3} m³</span></li>` : '';
+            var notaCerecita = revoqueExt === 'hidrofugo' ? '<li><span>Nota técnica para el Cliente:</span> <span style="font-size:11px; color:#27AE60; font-weight:bold;">Aislación Hidrófuga \"Cerecita\" incluida.</span></li>' : '';
+
+            var htmlDesglose = `
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo" style="color: #27AE60;">RUBRO 1: ELEVACIÓN DE MUROS</div>
+                    <ul>
+                        <li><span>${nombreLadrilloText}</span> <span class="destacado">${itemA_Ladrillos} u.</span></li>
+                        ${lineaPegamento} ${lineaCemAsiento} ${lineaCalAsiento} ${lineaArenaAsiento}
+                    </ul>
+                </div>
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo" style="color: #2980B9;">RUBRO 2: AISLACIÓN Y REVOQUES</div>
+                    <ul>
+                        ${lineaYeso} ${lineaCemRevoque} ${lineaCalRevoque} ${lineaArenaRevoque} ${notaCerecita}
+                    </ul>
+                </div>
+            `;
+
+            if(areaContrapiso > 0) {
+                htmlDesglose += `
+                    <div class="tarjeta-blanca">
+                        <div class="seccion-titulo" style="color: #D35400;">RUBRO 3: CONTRAPISO DE CASCOTE</div>
+                        <ul>
+                            <li><span>Cascote de Ladrillo Triturado</span> <span class="destacado">${itemC_CascoteM3} m³</span></li>
+                            <li><span>Cemento para Contrapiso (50kg)</span> <span class="destacado">${itemC_CementoBolsas} Bolsas</span></li>
+                            <li><span>Cal Hidráulica para Contrapiso (20kg)</span> <span class="destacado">${itemC_CalBolsas} Bolsas</span></li>
+                            <li><span>Arena para Mezcla Contrapiso</span> <span class="destacado">${itemC_ArenaM3} m³</span></li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if(areaCarpeta > 0) {
+                htmlDesglose += `
+                    <div class="tarjeta-blanca">
+                        <div class="seccion-titulo" style="color: #8E44AD;">RUBRO 4: CARPETA CEMENTICIA Niveladora</div>
+                        <ul>
+                            <li><span>Cemento Estructural Carpeta (50kg)</span> <span class="destacado">${itemD_CementoBolsas} Bolsas</span></li>
+                            <li><span>Arena Fina Fuerte Carpeta</span> <span class="destacado">${itemD_ArenaM3} m³</span></li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            document.getElementById('contenedorDesgloseRubros').innerHTML = htmlDesglose;
+
+            textoPedidoWhatsAppMaster = "Hola! Solicito presupuesto consolidado para materiales de albañilería en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster += "- " + nombreLadrilloText + ": " + globalTotalLadrillos + " u.\n";
+            if(globalTotalCementoBolsas > 0) textoPedidoWhatsAppMaster += "- Cemento Gris (50kg): " + globalTotalCementoBolsas + " bolsas\n";
+            if(globalTotalCalBolsas > 0) textoPedidoWhatsAppMaster += "- Cal Hidráulica (20kg): " + globalTotalCalBolsas + " bolsas\n";
+            if(globalTotalArenaM3 > 0) textoPedidoWhatsAppMaster += "- Arena Standard: " + globalTotalArenaM3 + " m³\n";
+            if(itemC_CascoteM3 > 0) textoPedidoWhatsAppMaster += "- Cascote Molido: " + itemC_CascoteM3 + " m³\n";
+            if(itemA_PegamentoKg > 0) textoPedidoWhatsAppMaster += "- Adhesivo Retak: " + itemA_PegamentoKg + " Kg\n";
+            if(itemB_YesoBolsas > 0) textoPedidoWhatsAppMaster += "- Yeso Proyectado (30kg): " + itemB_YesoBolsas + " bolsas\n\n";
+            textoPedidoWhatsAppMaster += "Aguardamos cotización final puesta en obra. Saludos!";
+
+            var fechaHoy = new Date().toISOString().slice(0,10);
+            textoArchivoDescargaMaster = "=========================================================================\r\n";
+            textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES DESGLOSADO POR ITEM DE OBRA\r\n";
+            textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
+            textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
+            textoArchivoDescargaMaster += "ITEM 1: ELEVACION DE MUROS (" + nombreLadrilloText + ")\r\n";
+            textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+            textoArchivoDescargaMaster += "Mampuestos / Ladrillos de Estructura\t\t\t" + itemA_Ladrillos + " u.\r\n";
+            if(itemA_PegamentoKg > 0) textoArchivoDescargaMaster += "Pegamento Mortero Retak Cerámico\t\t\t\t" + itemA_PegamentoKg + " Kg\r\n";
+            if(itemA_CementoBolsas > 0) textoArchivoDescargaMaster += "Cemento para Mezcla de Asiento (50kg)\t\t\t" + itemA_CementoBolsas + " Bolsas\r\n";
+            if(itemA_CalBolsas > 0) textoArchivoDescargaMaster += "Cal Hidráulica para Asiento (20kg)\t\t\t\t" + itemA_CalBolsas + " Bolsas\r\n";
+            if(itemA_ArenaM3 > 0) textoArchivoDescargaMaster += "Arena Lavada para Asiento\t\t\t\t\t" + itemA_ArenaM3 + " m³\r\n";
+
+            textoArchivoDescargaMaster += "\r\nITEM 2: CAPAS AISLADORAS Y REVOQUES INTERNOS/EXTERNOS\r\n";
+            textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+            if(itemB_YesoBolsas > 0) textoArchivoDescargaMaster += "Yeso Interior Alisado Fino (Bolsas 30kg)\t\t\t" + itemB_YesoBolsas + " Bolsas\r\n";
+            if(itemB_CementoBolsas > 0) textoArchivoDescargaMaster += "Cemento Gris Revoques y Cerecita (50kg)\t\t\t" + itemB_CementoBolsas + " Bolsas\r\n";
+            if(itemB_CalBolsas > 0) textoArchivoDescargaMaster += "Cal Hidráulica para Revoque Grueso (20kg)\t\t\t" + itemB_CalBolsas + " Bolsas\r\n";
+            if(itemB_ArenaM3 > 0) textoArchivoDescargaMaster += "Arena Fina/Mediana para Revoques\t\t\t\t" + itemB_ArenaM3 + " m³\r\n";
+
+            if(areaContrapiso > 0) {
+                textoArchivoDescargaMaster += "\r\nITEM 3: ESTRUCTURA DE CONTRAPISO DE CASCOTE\r\n";
+                textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+                textoArchivoDescargaMaster += "Cascote de Ladrillo Molido Limpio\t\t\t\t" + itemC_CascoteM3 + " m³\r\n";
+                textoArchivoDescargaMaster += "Cemento para Mezcla Contrapiso (50kg)\t\t\t" + itemC_CementoBolsas + " Bolsas\r\n";
+                textoArchivoDescargaMaster += "Cal Hidráulica de Obra (20kg)\t\t\t\t" + itemC_CalBolsas + " Bolsas\r\n";
+                textoArchivoDescargaMaster += "Arena Gruesa de Relleno Contrapiso\t\t\t" + itemC_ArenaM3 + " m³\r\n";
+            }
+
+            if(areaCarpeta > 0) {
+                textoArchivoDescargaMaster += "\r\nITEM 4: CARPETA CEMENTICIA NIVELADORA (DOSIFICACIÓN 1:3)\r\n";
+                textoArchivoDescargaMaster += "-------------------------------------------------------------------------\r\n";
+                textoArchivoDescargaMaster += "Cemento de Alta Resistencia Carpeta (50kg)\t\t\t" + itemD_CementoBolsas + " Bolsas\r\n";
+                textoArchivoDescargaMaster += "Arena Clasificada para Carpeta\t\t\t\t" + itemD_ArenaM3 + " m³\r\n";
+            }
+            textoArchivoDescargaMaster += "\r\n=========================================================================\r\n";
+            textoArchivoDescargaMaster += "* Este pliego técnico audita que los materiales se utilicen por tarea *\r\n";
+            textoArchivoDescargaMaster += "=========================================================================\r\n";
+
+            cambiarPantalla('pantalla-resultados');
+        }
+
+        function descargarArchivoTextoPedido() {
+            if(textoArchivoDescargaMaster === "") { alert("No hay cómputo para descargar."); return; }
+            var blob = new Blob([textoArchivoDescargaMaster], { type: "text/plain;charset=utf-8" });
+            var elementoEnlace = document.createElement("a");
+            elementoEnlace.href = URL.createObjectURL(blob);
+            elementoEnlace.download = "YoCalculo_Auditoria_Albanileria_" + new Date().toISOString().slice(0,10) + ".txt";
+            document.body.appendChild(elementoEnlace); elementoEnlace.click(); document.body.removeChild(elementoEnlace);
+        }
+
+        function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
+            if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego activo."); return; }
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            window.open(urlWhatsappNativa, '_blank');
+        }
+
+        async function buscarPrecioML(termino) {
+            try {
+                let respuesta = await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(termino)}&condition=new&limit=4`);
+                let datos = await respuesta.json();
+                if(datos.results && datos.results.length > 0) {
+                    let total = 0; let cv = Math.min(datos.results.length, 3);
+                    for(let i=0; i<cv; i++) { total += datos.results[i].price; }
+                    return total / cv;
+                } return 0;
+            } catch (e) { return 0; }
+        }
+
+        async function iniciarCotizadorML() {
+            cambiarPantalla('pantalla-cotizador');
+            document.getElementById('precioMLReferencia').innerText = "Calculando...";
+            let precios = await Promise.all([
+                buscarPrecioML(nombreLadrilloBusqueda), 
+                buscarPrecioML("bolsa cemento 50kg loma negra"), 
+                buscarPrecioML("bolsa cal hidraulica 20kg cacique")
+            ]);
+            let pLad = precios[0] || 420; let pCem = precios[1] || 9800; let pCal = precios[2] || 4800;
+            var costoMat = ((globalTotalLadrillos * pLad) + (globalTotalCementoBolsas * pCem) + (globalTotalCalBolsas * pCal));
+            var presupuestoFinal = (costoMat * 2.35) + (globalAreaNetaMuro * 14000);
+            document.getElementById('precioMLReferencia').innerText = "$ " + Math.round(presupuestoFinal).toLocaleString('es-AR');
+        }
+
+        async function mostrarProveedores() {
+            var provincia_seleccionada = document.getElementById('provincia_obra').value;
+            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase();
+
+            if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad de la obra."); return; }
+
+            document.getElementById('form-cotizador').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'none'; 
+            document.getElementById('loader-precios').style.display = 'block';
+
+            try {
+                const [resMateriales, resManoObra] = await Promise.all([
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mamposteria').eq('estado_suscripcion', 'activa'),
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_mamposteria').eq('estado_suscripcion', 'activa')
+                ]);
+
+                const matData = (resMateriales.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+                const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+
+                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
+                contenedor.innerHTML = ""; 
+
+                let htmlMat = "";
+                if (matData.length > 0) {
+                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">🧱 CORRALONES DESTACADOS</div>`;
+                    matData.forEach(prov => {
+                        htmlMat += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
+                            </div>`;
+                    });
+                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos corralón? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni caleras destacadas aquí.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
+                }
+
+                let htmlMo = "";
+                if (moData.length > 0) {
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ALBAÑILES Y CONSTRUCTORES</div>`;
+                    moData.forEach(prov => {
+                        htmlMo += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Cobertura: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Contactar Especialista</button>
+                            </div>`;
+                    });
+                    htmlMo += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos albañil? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMo += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 MANO DE OBRA:<br>ZONA LIBRE</h3><p>No hay oficiales ni contratistas registrados aquí.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Postularme Acá</a></div>`;
+                }
+
+                contenedor.innerHTML = htmlMat + htmlMo;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
+            }
+
+            document.getElementById('form-cotizador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'block';
+            cambiarPantalla('pantalla-precio-final');
+        }
+    </script>
+</body>
+</html>

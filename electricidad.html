@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YOCALCULO - Instalación Eléctrica</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e24">
+    <link rel="apple-touch-icon" href="icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .contenedor-app-yocalculo { position: relative; width: 100%; height: 100%; max-width: 432px; max-height: 960px; aspect-ratio: 432 / 960; background-color: #F4F5F7; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0px 10px 40px rgba(0,0,0,0.8); flex-shrink: 0; }
+        @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
+        .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
+        .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+        .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; height: calc(100% - 36px); position: relative; }
+        .pantalla.activa { display: flex; }
+        .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
+        .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+        .contenido-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 110px; box-sizing: border-box; }
+        .tarjeta-blanca { background-color: #FFFFFF; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #EBEBEB; box-sizing: border-box; border-radius: 6px;}
+        .tarjeta-ml { background-color: #FFFDF0; border: 2px solid #FBDD23; text-align: center; }
+        .seccion-titulo { color: #4B4B4D; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 0; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F4F5F7; padding-bottom: 4px; }
+        label { color: #7A7A7A; display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="number"], input[type="text"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 16px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .mapa-contenedor { position: relative; width: 100%; aspect-ratio: 591 / 1000; background-image: url('plano.jpg'); background-size: 100% 100%; background-position: center; border: 1px solid #EBEBEB; box-sizing: border-box; flex-shrink: 0; }
+        .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+        .z-dorm1    { top: 5%;  left: 15%; width: 34%; height: 25%; }
+        .z-dorm2    { top: 5%;  left: 51%; width: 40%; height: 26%; }
+        .z-bano     { top: 31%; left: 15%; width: 26%; height: 11%; }
+        .z-lavadero { top: 32%; left: 51%; width: 24%; height: 14%; }
+        .z-cocina   { top: 43%; left: 15%; width: 28%; height: 9%; }
+        .z-pasillo  { top: 31%; left: 42%; width: 8%;  height: 38%; }
+        .z-living   { top: 53%; left: 15%; width: 35%; height: 36%; }
+        .z-garage   { top: 47%; left: 51%; width: 40%; height: 42%; }
+        .badge-estado { font-size: 11px; color: #7A7A7A; font-weight: bold; text-transform: uppercase; }
+        .barra-inferior { position: absolute; bottom: 0; left: 0; width: 100%; background: #FFFFFF; padding: 15px 20px; box-sizing: border-box; border-top: 1px solid #E5E5E5; z-index: 5; flex-shrink: 0; }
+        .btn-amarillo-fijo { width: 100%; padding: 15px; background-color: #FBDD23; color: #4B4B4D; border: none; font-weight: 900; font-size: 16px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; border-radius: 6px;}
+        .btn-amarillo-fijo:active { filter: brightness(0.95); transform: scale(0.98); }
+        .btn-gris-fijo { width: 100%; padding: 15px; background-color: #4B4B4D; color: #FBDD23; border: none; font-weight: 900; font-size: 15px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px; border-radius: 6px;}
+        .btn-gris-fijo:active { transform: scale(0.98); }
+        .btn-descargar-archivo-txt { width: 100%; padding: 12px; background-color: #7A7A7A; color: #FFFFFF; border: none; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-align: center; box-sizing: border-box; margin-bottom: 15px; display: block; border-radius: 4px; transition: background-color 0.1s; }
+        .btn-descargar-archivo-txt:active { background-color: #636363; }
+        .btn-whatsapp-proveedor { width: 100%; padding: 12px; background-color: #2ECC71; color: #FFFFFF; border: none; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; border-radius: 4px; display: block; text-decoration: none; box-sizing: border-box; margin-top: 10px; }
+        .btn-whatsapp-proveedor:active { background-color: #27AE60; }
+        .banner-publicitario-estatico-fijo { position: absolute; bottom: 76px; left: 15px; width: calc(100% - 30px); aspect-ratio: 1080 / 450; background-color: #EBEBEB; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px dashed #7A7A7A; box-sizing: border-box; z-index: 4; }
+        .tag-publicidad { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7A7A7A; font-weight: bold; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .scroll-con-publicidad-fija { padding-bottom: 240px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 8px 0; border-bottom: 1px solid #F4F5F7; font-size: 13px; color: #4B4B4D; display: flex; justify-content: space-between; align-items: center; }
+        li:last-child { border-bottom: none; }
+        .destacado { font-weight: bold; font-size: 13px; color: #000; background: #F4F5F7; padding: 2px 6px; border-radius: 4px; }
+        .cargando-presupuesto { text-align: center; padding: 40px 20px; display: none; }
+        .spinner { border: 4px solid #EBEBEB; border-top: 4px solid #FBDD23; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tarjeta-zona-libre { background-color: #1e1e24; color: #FFFFFF; padding: 20px 15px; border-radius: 8px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border: 2px solid #FBDD23; margin-bottom: 15px; }
+        .tarjeta-zona-libre h3 { margin-top: 0; color: #FBDD23; font-size: 18px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;}
+        .tarjeta-zona-libre p { font-size: 13px; line-height: 1.4; color: #EBEBEB; margin-bottom: 12px; text-align: left; }
+        .tarjeta-zona-libre ul { list-style: none; padding: 0; margin: 0 0 15px 0; text-align: left; }
+        .tarjeta-zona-libre li { color: #FFFFFF; font-size: 12px; margin-bottom: 8px; border-bottom: none; display: flex; align-items: flex-start; padding: 0; line-height: 1.3;}
+        .tarjeta-zona-libre li::before { content: '✔'; color: #FBDD23; margin-right: 8px; font-weight: bold;}
+        .btn-mp-proveedor { background-color: #FBDD23; color: #1e1e24; border: none; padding: 14px; width: 100%; font-size: 14px; font-weight: 900; text-transform: uppercase; border-radius: 6px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; transition: transform 0.1s;}
+        .btn-mp-proveedor:active { transform: scale(0.98); }
+        .tarjeta-upsell { background-color: #F4F5F7; border: 1px dashed #7A7A7A; padding: 12px; border-radius: 6px; margin-top: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-app-yocalculo">
+        
+        <div class="status-bar">
+            <div class="status-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.93 4.93l2.83 2.83"></path><path d="M16.24 16.24l2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="M4.93 19.07l2.83-2.83"></path><path d="M16.24 7.76l2.83-2.83"></path>
+                </svg>
+                <span style="color: #4B4B4D; font-weight: 800; font-size: 10px; letter-spacing: 0.5px;">ESTÁS TRABAJANDO EN LÍNEA...</span>
+            </div>
+            <div class="status-right">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text>
+                </svg>
+            </div>
+        </div>
+
+        <div id="pantalla-plano" class="pantalla activa">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Instalación Eléctrica</h2></div>
+            <div class="contenido-scroll">
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Alturas de Obra (m)</div>
+                    <div class="grid-2">
+                        <div><label>Techo</label><input type="number" id="altTecho" value="2.80" step="0.1"></div>
+                        <div><label>Llaves de luz</label><input type="number" id="altLlaves" value="1.10" step="0.1"></div>
+                        <div><label>Tomas bajos</label><input type="number" id="altTomasB" value="0.40" step="0.1"></div>
+                        <div><label>Tomas altos</label><input type="number" id="altTomasM" value="1.20" step="0.1"></div>
+                    </div>
+                </div>
+
+                <div class="tarjeta-blanca" style="padding: 0 5px; background-color: transparent; border: none; box-shadow: none;">
+                    <div style="text-align: center; margin-bottom: 12px;">
+                        <span style="color: #4B4B4D; font-size: 15px; font-weight: 800; text-transform: uppercase; display: block; letter-spacing: 0.5px;">Plano Interactivo</span>
+                        <span style="font-size: 11px; color: #7A7A7A; font-weight: normal; display: block; margin-top: 2px;">Toca cada ambiente para configurar el tendido.</span>
+                        <span class="badge-estado" style="display: block; margin-top: 6px; font-size: 11px;">Ambientes cargados: <span id="contador" style="color: #000; font-weight: 800;">0</span></span>
+                    </div>
+                    
+                    <div class="mapa-contenedor">
+                        <button class="zona-click z-dorm1" onclick="abrirFormulario('Dormitorio 1')"></button>
+                        <button class="zona-click z-dorm2" onclick="abrirFormulario('Dormitorio 2')"></button>
+                        <button class="zona-click z-bano"  onclick="abrirFormulario('Baño')"></button>
+                        <button class="zona-click z-lavadero" onclick="abrirFormulario('Lavadero Sala de Máquinas')"></button>
+                        <button class="zona-click z-cocina" onclick="abrirFormulario('Cocina')"></button>
+                        <button class="zona-click z-pasillo" onclick="abrirFormulario('Pasillo')"></button>
+                        <button class="zona-click z-living" onclick="abrirFormulario('Living / Comedor')"></button>
+                        <button class="zona-click z-garage" onclick="abrirFormulario('Garage')"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="barra-inferior"><button class="btn-amarillo-fijo" onclick="computarTotal()">Generar Cómputo</button></div>
+        </div>
+
+        <div id="pantalla-formulario" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="volverAlPlano()">&#10094;</button><h2 class="header-title" id="nombreAmbiente">Ambiente</h2></div>
+            <div class="contenido-scroll">
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Medidas Generales</div>
+                    <div class="grid-2">
+                        <div><label>Largo (m)</label><input type="number" id="largo" placeholder="0"></div>
+                        <div><label>Ancho (m)</label><input type="number" id="ancho" placeholder="0"></div>
+                    </div>
+                    <label>Distancia aprox. al Tablero principal (m)</label><input type="number" id="distanciaT" placeholder="0">
+                </div>
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Bocas y Tomas</div>
+                    <div class="grid-2">
+                        <div><label>Bocas de techo</label><input type="number" id="luces" placeholder="0"></div>
+                        <div><label>Llaves de luz</label><input type="number" id="llave1" placeholder="0"></div>
+                        <div><label>Tomas bajos</label><input type="number" id="tb1" placeholder="0"></div>
+                        <div><label>Tomas altos</label><input type="number" id="tm1" placeholder="0"></div>
+                    </div>
+                    <label style="margin-top: 15px;">Tomas Especiales 20A (Aire/Horno)</label><input type="number" id="tomaE" placeholder="0">
+                    
+                    <div id="bloque-bombas" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #CCCCCC;">
+                        <label style="color:#4B4B4D;">Potencia Bomba de Agua</label>
+                        <select id="potenciaBomba">
+                            <option value="0">Sin bomba en esta etapa</option>
+                            <option value="0.5">Bomba Periférica 0.5 HP</option>
+                            <option value="1">Bomba Centrifuga 1 HP</option>
+                            <option value="2">Bomba Presurizadora/Cisterna 2 HP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="barra-inferior"><button class="btn-amarillo-fijo" onclick="guardarAmbiente()">✔️ Confirmar</button></div>
+        </div>
+
+        <div id="pantalla-resultados" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="volverAlPlano()">&#10094;</button><h2 class="header-title">Lista de Materiales</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija">
+                <button class="btn-nuevo-calculo-banner" style="width: 100%; padding: 10px; background: transparent; border: 1px solid #7A7A7A; color: #7A7A7A; font-weight: bold; text-transform: uppercase; border-radius: 4px; margin-bottom: 10px; cursor: pointer;" onclick="reiniciarCalculo()">Nuevo Cálculo</button>
+                <button class="btn-descargar-archivo-txt" onclick="descargarArchivoTextoPedido()">💾 Descargar Listado (.TXT)</button>
+
+                <div class="tarjeta-blanca"><div class="seccion-titulo">1. Conductores y Cables (Mts)</div><ul id="listaCables"></ul></div>
+                <div class="tarjeta-blanca"><div class="seccion-titulo">2. Canalizaciones y Cajas</div><ul id="listaCajas"></ul></div>
+                <div class="tarjeta-blanca"><div class="seccion-titulo">3. Módulos y Efectos</div><ul id="listaModulos"></ul></div>
+                <div class="tarjeta-blanca"><div class="seccion-titulo">4. Tablero, Protecciones y Pilar</div><ul id="listaTableros"></ul></div>
+                <div class="tarjeta-blanca"><div class="seccion-titulo">5. Elementos de Seguridad</div><ul id="listaSeguridad"></ul></div>
+            </div>
+            <div class="banner-publicitario-estatico-fijo">
+                <span class="tag-publicidad">Auspiciante Local</span>
+                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+            <div class="barra-inferior"><button class="btn-gris-fijo" onclick="iniciarCotizadorML()"><span style="font-size: 24px; line-height: 0; margin-right: 6px; font-weight: 900;">$</span> Cotizar en mi Zona</button></div>
+        </div>
+
+        <div id="pantalla-cotizador" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-resultados')">&#10094;</button><h2 class="header-title">Cotizador Inteligente</h2></div>
+            <div class="contenido-scroll scroll-con-publicidad-fija" id="form-cotizador">
+                <div class="tarjeta-blanca tarjeta-ml">
+                    <p style="font-size: 11px; color: #7A7A7A; margin-bottom: 5px; font-weight: 800;">VALOR DE REFERENCIA (MERCADO LIBRE AR)</p>
+                    <h2 id="precioMLReferencia" style="color: #4B4B4D; font-size: 32px; margin: 5px 0; font-family: 'Arial Black', sans-serif;">Calculando...</h2>
+                    <p style="font-size: 10px; color: #7A7A7A; margin: 0;">*Costos de materiales promedio + Mano de obra base</p>
+                </div>
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Ubicación de la obra</div>
+                    <label>Provincia</label>
+                    <select id="provincia_obra">
+                        <option value="Buenos Aires">Buenos Aires</option>
+                        <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
+                        <option value="Catamarca">Catamarca</option>
+                        <option value="Chaco">Chaco</option>
+                        <option value="Chubut">Chubut</option>
+                        <option value="Córdoba">Córdoba</option>
+                        <option value="Corrientes">Corrientes</option>
+                        <option value="Entre Ríos">Entre Ríos</option>
+                        <option value="Formosa">Formosa</option>
+                        <option value="Jujuy">Jujuy</option>
+                        <option value="La Pampa">La Pampa</option>
+                        <option value="La Rioja">La Rioja</option>
+                        <option value="Mendoza">Mendoza</option>
+                        <option value="Misiones">Misiones</option>
+                        <option value="Neuquén">Neuquén</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Salta">Salta</option>
+                        <option value="San Juan">San Juan</option>
+                        <option value="San Luis">San Luis</option>
+                        <option value="Santa Cruz">Santa Cruz</option>
+                        <option value="Santa Fe">Santa Fe</option>
+                        <option value="Santiago del Estero">Santiago del Estero</option>
+                        <option value="Tierra del Fuego">Tierra del Fuego</option>
+                        <option value="Tucumán">Tucumán</option>
+                    </select>
+                    <label>Localidad / Ciudad de la Obra</label>
+                    <input type="text" id="localidad_obra" placeholder="Ej: San Isidro, Alta Gracia, Rosario...">
+                </div>
+            </div>
+            <div class="cargando-presupuesto" id="loader-precios"><div class="spinner"></div><h3 style="color: #4B4B4D; margin-top:0;">Buscando en la nube...</h3></div>
+            <div class="banner-publicitario-estatico-fijo">
+                <span class="tag-publicidad">Auspiciante Local</span>
+                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
+            </div>
+            <div class="barra-inferior" id="btn-buscar-precios"><button class="btn-amarillo-fijo" onclick="mostrarProveedores()">Buscar Proveedores</button></div>
+        </div>
+
+        <div id="pantalla-precio-final" class="pantalla">
+            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-cotizador')">✕</button><h2 class="header-title">Proveedores Locales</h2></div>
+            <div class="contenido-scroll" id="contenedor-dinamico-proveedores"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONEXIÓN MOTOR SUPABASE ---
+        const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
+        const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
+
+        var ambientes = [];
+        var ambienteActual = "";
+        
+        var globalLuces = 0; var globalLlaves = 0; var globalTBajos = 0; var globalTAltos = 0; var globalTEspeciales = 0;
+        var globalMetrosCano = 0; var globalBombaHp = 0;
+
+        var textoPedidoWhatsAppMaster = "";
+        var textoArchivoDescargaMaster = ""; 
+
+        function cambiarPantalla(id) {
+            var pantallas = document.querySelectorAll('.pantalla');
+            for(var i=0; i<pantallas.length; i++) { pantallas[i].classList.remove('activa'); }
+            document.getElementById(id).classList.add('activa');
+        }
+
+        function reiniciarCalculo() {
+            ambientes = [];
+            globalLuces = 0; globalLlaves = 0; globalTBajos = 0; globalTAltos = 0; globalTEspeciales = 0;
+            globalMetrosCano = 0; globalBombaHp = 0;
+            textoPedidoWhatsAppMaster = "";
+            textoArchivoDescargaMaster = "";
+            document.getElementById('contador').innerText = "0";
+            limpiarFormularioFisicoA0();
+            cambiarPantalla('pantalla-plano');
+            alert("¡Obra borrada! Todos los formularios regresaron a cero.");
+        }
+
+        function limpiarFormularioFisicoA0() {
+            document.getElementById('largo').value = "";
+            document.getElementById('ancho').value = "";
+            document.getElementById('distanciaT').value = "";
+            document.getElementById('luces').value = "";
+            document.getElementById('llave1').value = "";
+            document.getElementById('tb1').value = "";
+            document.getElementById('tm1').value = "";
+            document.getElementById('tomaE').value = "";
+            document.getElementById('potenciaBomba').value = "0";
+        }
+
+        function abrirFormulario(nombre) {
+            ambienteActual = nombre;
+            document.getElementById('nombreAmbiente').innerText = nombre;
+            limpiarFormularioFisicoA0();
+            if(nombre.indexOf('Lavadero') !== -1) {
+                document.getElementById('bloque-bombas').style.display = 'block';
+            } else {
+                document.getElementById('bloque-bombas').style.display = 'none';
+            }
+            cambiarPantalla('pantalla-formulario');
+        }
+
+        function volverAlPlano() { cambiarPantalla('pantalla-plano'); }
+
+        function guardarAmbiente() {
+            var l = parseInt(document.getElementById('luces').value) || 0;
+            var ll = parseInt(document.getElementById('llave1').value) || 0;
+            var tb = parseInt(document.getElementById('tb1').value) || 0;
+            var tm = parseInt(document.getElementById('tm1').value) || 0;
+            var te = parseInt(document.getElementById('tomaE').value) || 0;
+            var bHp = parseFloat(document.getElementById('potenciaBomba').value) || 0;
+            var largo = parseFloat(document.getElementById('largo').value) || 0;
+            var ancho = parseFloat(document.getElementById('ancho').value) || 0;
+            var distT = parseFloat(document.getElementById('distanciaT').value) || 0;
+
+            var metrosCanoAmbiente = ((largo + ancho) * 2) + distT;
+
+            ambientes.push({
+                nombre: ambienteActual,
+                luces: l, llaves: ll, tBajos: tb, tAltos: tm, tEspeciales: te,
+                bombaHp: bHp, metrosCano: metrosCanoAmbiente
+            });
+
+            document.getElementById('contador').innerText = ambientes.length;
+            limpiarFormularioFisicoA0();
+            volverAlPlano();
+        }
+
+        function computarTotal() {
+            if(ambientes.length === 0) { alert("Socio, tocá un ambiente en el plano primero para configurarlo."); return; }
+
+            globalLuces = 0; globalLlaves = 0; globalTBajos = 0; globalTAltos = 0; globalTEspeciales = 0;
+            globalMetrosCano = 0; globalBombaHp = 0;
+
+            for(var i=0; i<ambientes.length; i++) {
+                globalLuces += ambientes[i].luces;
+                globalLlaves += ambientes[i].llaves;
+                globalTBajos += ambientes[i].tBajos;
+                globalTAltos += ambientes[i].tAltos;
+                globalTEspeciales += ambientes[i].tEspeciales;
+                globalMetrosCano += ambientes[i].metrosCano;
+                if(ambientes[i].bombaHp > globalBombaHp) { globalBombaHp = ambientes[i].bombaHp; }
+            }
+
+            var cableIlumRojo = Math.ceil(globalLuces * 12);
+            var cableIlumCeleste = Math.ceil(globalLuces * 10);
+            var cableIlumBlanco = Math.ceil(globalLlaves * 8);
+            var cableIlumTierra = Math.ceil(globalLuces * 4);
+
+            var cableTomasMarron = Math.ceil((globalTBajos + globalTAltos) * 14);
+            var cableTomasCeleste = Math.ceil((globalTBajos + globalTAltos) * 14);
+            var cableTomasTierra = Math.ceil((globalTBajos + globalTAltos) * 12);
+
+            var cableEspecialVioleta = Math.ceil(globalTEspeciales * 16);
+            var cableEspecialCeleste = Math.ceil(globalTEspeciales * 16);
+            var cableEspecialTierra = Math.ceil(globalTEspeciales * 14);
+
+            if(globalBombaHp > 0) {
+                cableEspecialVioleta += 25;
+                cableEspecialCeleste += 25;
+                cableEspecialTierra += 25;
+            }
+
+            var tirasCanoRigido = Math.ceil(globalMetrosCano / 3);
+            var codosRigidos = Math.ceil(tirasCanoRigido * 1.5);
+            var conectoresRigidos = tirasCanoRigido * 2;
+            var cajasRectangulares = globalLlaves + globalTBajos + globalTAltos + globalTEspeciales;
+            var cajasHexagonales = globalLuces;
+            var cajasPaseDerivacion = Math.ceil(ambientes.length * 1.5);
+
+            var totalBocasEstructurales = globalTBajos + globalTAltos;
+            var modulosEspeciales = globalTEspeciales + (globalBombaHp > 0 ? 1 : 0);
+
+            // RENDERIZADO EN PANTALLA DE RESULTADOS
+            document.getElementById('listaCables').innerHTML = `
+                <li><span>Cable 1.5mm² (Fase - Rojo)</span> <span class="destacado">${cableIlumRojo} m</span></li>
+                <li><span>Cable 1.5mm² (Neutro - Celeste)</span> <span class="destacado">${cableIlumCeleste} m</span></li>
+                <li><span>Cable 1.5mm² (Retornos - Blanco)</span> <span class="destacado">${cableIlumBlanco} m</span></li>
+                <li><span>Cable 2.5mm² (Fase - Marrón)</span> <span class="destacado">${cableTomasMarron} m</span></li>
+                <li><span>Cable 2.5mm² (Neutro - Celeste)</span> <span class="destacado">${cableTomasCeleste} m</span></li>
+                <li><span>Cable 4.0mm² (Tomas Especiales - Violeta)</span> <span class="destacado">${cableEspecialVioleta} m</span></li>
+                <li><span>Cable Verde/Amarillo (Puesta a Tierra General)</span> <span class="destacado">${cableIlumTierra + cableTomasTierra + cableEspecialTierra} m</span></li>
+            `;
+
+            document.getElementById('listaCajas').innerHTML = `
+                <li><span>Caño Rígido PVC 3/4" (Tiras de 3m)</span> <span class="destacado">${tirasCanoRigido} u.</span></li>
+                <li><span>Codos Rígidos 3/4"</span> <span class="destacado">${codosRigidos} u.</span></li>
+                <li><span>Conectores Rígidos a Caja 3/4"</span> <span class="destacado">${conectoresRigidos} u.</span></li>
+                <li><span>Cajas Rectangulares 10x5 (Hierro)</span> <span class="destacado">${cajasRectangulares} u.</span></li>
+                <li><span>Cajas Octogonales Techo</span> <span class="destacado">${cajasHexagonales} u.</span></li>
+                <li><span>Cajas de Pase 15x15 (Derivación)</span> <span class="destacado">${cajasPaseDerivacion} u.</span></li>
+            `;
+
+            document.getElementById('listaModulos').innerHTML = `
+                <li><span>Módulos de Tomacorriente Común (10A)</span> <span class="destacado">${totalBocasEstructurales} u.</span></li>
+                <li><span>Módulos de Tomacorriente Especial (20A)</span> <span class="destacado">${modulosEspeciales} u.</span></li>
+                <li><span>Módulos Interruptor (Llave simple)</span> <span class="destacado">${globalLlaves} u.</span></li>
+                <li><span>Bastidores con Tapas Blancas</span> <span class="destacado">${cajasRectangulares} u.</span></li>
+            `;
+
+            var termicaIlum = "1x Térmica 10A (Bipolar)";
+            var termicaTomas = "1x Térmica 16A (Bipolar)";
+            var termicaEspecial = globalTEspeciales > 0 ? "1x Térmica 20A (Bipolar)" : "No requiere";
+            var termicaBomba = "No requiere";
+            var bocasTablero = 8;
+            if(globalTEspeciales > 0) { bocasTablero += 2; }
+            if(globalBombaHp > 0) { 
+                bocasTablero += 2; 
+                termicaBomba = "1x Térmica 16A Curva Motor (" + globalBombaHp + " HP)";
+            }
+
+            document.getElementById('listaTableros').innerHTML = `
+                <li><span>Kit Bajada de Medidor Completo Pilar</span> <span class="destacado">1 Kit</span></li>
+                <li><span>Tablero de PVC Embutir (Capacidad ${bocasTablero} Bocas)</span> <span class="destacado">1 u.</span></li>
+                <li><span>Disyuntor Diferencial General 40A / 30mA</span> <span class="destacado">1 u.</span></li>
+                <li><span>Circuito Iluminación</span> <span class="destacado">${termicaIlum}</span></li>
+                <li><span>Circuito Tomacorrientes (TUG)</span> <span class="destacado">${termicaTomas}</span></li>
+                <li><span>Circuito Especiales (TUE)</span> <span class="destacado">${termicaEspecial}</span></li>
+                <li><span>Circuito Bombas</span> <span class="destacado">${termicaBomba}</span></li>
+            `;
+
+            var htmlSeguridad = `<li><span>Protector de Alta/Baja Tensión Automático</span> <span class="destacado">1 u.</span></li>`;
+            if(globalBombaHp > 0) { htmlSeguridad += `<li><span>Interruptor Horario Timer Digital (Cisterna)</span> <span class="destacado">1 u.</span></li>`; }
+            document.getElementById('listaSeguridad').innerHTML = htmlSeguridad;
+
+            // PREPARACIÓN DE TEXTOS COMERCIALES MASTER
+            textoPedidoWhatsAppMaster = "Hola! Solicito cotización para materiales eléctricos calculados en YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster += "- Cable 1.5mm² (Rojo/Cel/Blanco): " + (cableIlumRojo+cableIlumCeleste+cableIlumBlanco) + "m total\n";
+            textoPedidoWhatsAppMaster += "- Cable 2.5mm² (Marron/Celeste): " + (cableTomasMarron+cableTomasCeleste) + "m total\n";
+            textoPedidoWhatsAppMaster += "- Caño Rígido PVC 3/4 (Tiras 3m): " + tirasCanoRigido + " u.\n";
+            textoPedidoWhatsAppMaster += "- Cajas Rectangulares 10x5: " + cajasRectangulares + " u.\n";
+            textoPedidoWhatsAppMaster += "- Cajas Octogonales Techo: " + cajasHexagonales + " u.\n";
+            textoPedidoWhatsAppMaster += "- Tomacorrientes 10A/20A completos: " + (totalBocasEstructurales+modulosEspeciales) + " u.\n";
+            textoPedidoWhatsAppMaster += "- Disyuntor Diferencial 40A + Térmicas correspondientes del pliego.\n\n";
+            textoPedidoWhatsAppMaster += "Quedo atento a su presupuesto puesto en obra. Saludos!";
+
+            var fechaHoy = new Date().toISOString().slice(0,10);
+            textoArchivoDescargaMaster = "=========================================================================\r\n";
+            textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES ELECTRICOS COMPLETO\r\n";
+            textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
+            textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
+            textoArchivoDescargaMaster += "Cables 1.5mm² Red Eléctrica\t\t\t\t" + (cableIlumRojo+cableIlumCeleste+cableIlumBlanco) + " m\r\n";
+            textoArchivoDescargaMaster += "Cables 2.5mm² Fuerza Motriz\t\t\t\t" + (cableTomasMarron+cableTomasCeleste) + " m\r\n";
+            textoArchivoDescargaMaster += "Tiras Caño Rígido PVC 3/4\"\t\t\t\t" + tirasCanoRigido + " u.\r\n";
+            textoArchivoDescargaMaster += "Cajas Rectangulares Chapa\t\t\t\t" + cajasRectangulares + " u.\r\n";
+            textoArchivoDescargaMaster += "Cajas Octogonales Techo\t\t\t\t" + cajasHexagonales + " u.\r\n";
+            textoArchivoDescargaMaster += "Disyuntor Diferencial 40A 30mA\t\t\t1 u.\r\n";
+
+            cambiarPantalla('pantalla-resultados');
+        }
+
+        function descargarArchivoTextoPedido() {
+            if(textoArchivoDescargaMaster === "") { alert("Socio, no hay cómputo para descargar."); return; }
+            var blob = new Blob([textoArchivoDescargaMaster], { type: "text/plain;charset=utf-8" });
+            var elementoEnlace = document.createElement("a");
+            elementoEnlace.href = URL.createObjectURL(blob);
+            elementoEnlace.download = "YoCalculo_Auditoria_Electricidad_" + new Date().toISOString().slice(0,10) + ".txt";
+            document.body.appendChild(elementoEnlace); elementoEnlace.click(); document.body.removeChild(elementoEnlace);
+        }
+
+        function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
+            if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego activo."); return; }
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            window.open(urlWhatsappNativa, '_blank');
+        }
+
+        async function buscarPrecioML(termino) {
+            try {
+                let respuesta = await fetch(`https://api.mercadolibre.com/sites/MLA/search?q=${encodeURIComponent(termino)}&condition=new&limit=4`);
+                let datos = await respuesta.json();
+                if(datos.results && datos.results.length > 0) {
+                    let total = 0; let cv = Math.min(datos.results.length, 3);
+                    for(let i=0; i<cv; i++) { total += datos.results[i].price; }
+                    return total / cv;
+                } return 0;
+            } catch (e) { return 0; }
+        }
+
+        async function iniciarCotizadorML() {
+            cambiarPantalla('pantalla-cotizador');
+            document.getElementById('precioMLReferencia').innerText = "Calculando...";
+            let precios = await Promise.all([
+                buscarPrecioML("rollo cable electrico 2.5 mm caliplast"),
+                buscarPrecioML("disyuntor sica 40a bipolar"),
+                buscarPrecioML("termica sica 16a bipolar")
+            ]);
+            let pRollo = precios[0] || 24000; let pDis = precios[1] || 19500; let pTerm = precios[2] || 7500;
+            var costoMatEstimado = (pRollo * 2.5) + pDis + (pTerm * 2);
+            var manoObraEstimada = (globalLuces + globalTBajos + globalTAltos) * 9500; 
+            var presupuestoFinal = costoMatEstimado + manoObraEstimada;
+            document.getElementById('precioMLReferencia').innerText = "$ " + Math.round(presupuestoFinal).toLocaleString('es-AR');
+        }
+
+        async function mostrarProveedores() {
+            var provincia_seleccionada = document.getElementById('provincia_obra').value;
+            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase();
+
+            if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad de la obra."); return; }
+
+            document.getElementById('form-cotizador').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'none'; 
+            document.getElementById('loader-precios').style.display = 'block';
+
+            try {
+                const [resMateriales, resManoObra] = await Promise.all([
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'electricidad').eq('estado_suscripcion', 'activa'),
+                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_electricidad').eq('estado_suscripcion', 'activa')
+                ]);
+
+                const matData = (resMateriales.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+                const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+
+                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
+                contenedor.innerHTML = ""; 
+
+                let htmlMat = "";
+                if (matData.length > 0) {
+                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">⚡ CASAS DE ELECTRICIDAD DESTACADAS</div>`;
+                    matData.forEach(prov => {
+                        htmlMat += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
+                            </div>`;
+                    });
+                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos comercio del rubro? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay casas de electricidad destacadas aquí todavía.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
+                }
+
+                let htmlMo = "";
+                if (moData.length > 0) {
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ELECTRICISTAS MATRICULADOS</div>`;
+                    moData.forEach(prov => {
+                        htmlMo += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Cobertura: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Contactar Electricista</button>
+                            </div>`;
+                    });
+                    htmlMo += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos instalador? Registrate acá</a></div></div>`;
+                } else {
+                    htmlMo += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 MANO DE OBRA:<br>ZONA LIBRE</h3><p>No hay electricistas matriculados en esta zona.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Postularme Acá</a></div>`;
+                }
+
+                contenedor.innerHTML = htmlMat + htmlMo;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
+            }
+
+            document.getElementById('form-cotizador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'block';
+            cambiarPantalla('pantalla-precio-final');
+        }
+    </script>
+</body>
+</html>

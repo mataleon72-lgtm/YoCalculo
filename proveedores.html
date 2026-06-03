@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>YOCALCULO - Unite a la Red</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1e24">
+    <link rel="apple-touch-icon" href="icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Artifakt Element', 'Segoe UI', system-ui, sans-serif; }
+        .contenedor-app-yocalculo { 
+            position: relative; width: 100%; height: 100%; max-width: 432px; max-height: 960px; aspect-ratio: 432 / 960; background-color: #F4F5F7; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0px 10px 40px rgba(0,0,0,0.8); flex-shrink: 0; 
+        }
+        @media (max-width: 600px) { 
+            .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } 
+        }
+        
+        .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
+        .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; font-family: monospace; }
+        .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;}
+        
+        .contenido-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; box-sizing: border-box; }
+        .tarjeta-blanca { background-color: #FFFFFF; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #EBEBEB; box-sizing: border-box; border-radius: 6px; }
+        .seccion-titulo { color: #4B4B4D; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 0; margin-bottom: 12px; border-bottom: 2px solid #FBDD23; padding-bottom: 5px; display: inline-block;}
+        
+        label { color: #7A7A7A; display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 15px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; transition: border-bottom-color 0.2s;}
+        input:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
+
+        .barra-inferior { position: absolute; bottom: 0; left: 0; width: 100%; background: #FFFFFF; padding: 15px 20px; box-sizing: border-box; border-top: 1px solid #E5E5E5; z-index: 5; flex-shrink: 0; }
+        
+        .btn-mercadopago { 
+            width: 100%; 
+            padding: 15px; 
+            background-color: #009EE3; 
+            color: #FFFFFF; 
+            border: none; 
+            font-weight: 800; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            cursor: pointer; 
+            transition: filter 0.2s; 
+            border-radius: 4px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 4px; 
+        }
+        .btn-mercadopago:hover { filter: brightness(0.95); }
+        .btn-mercadopago:disabled { background-color: #CCCCCC; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="contenedor-app-yocalculo">
+        <div class="header-nativo">
+            <button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button>
+            <h2 class="header-title">Unite a la Red</h2>
+        </div>
+
+        <div class="contenido-scroll">
+            
+            <div class="tarjeta-blanca" style="background-color: #4B4B4D; color: white;">
+                <h3 style="margin: 0 0 5px 0; font-size: 18px; color: #FBDD23;">Destacá en tu zona</h3>
+                <p style="margin: 0; font-size: 12px; color: #EBEBEB;">Conectá directo con clientes que ya tienen su lista de materiales lista para comprar y construir.</p>
+            </div>
+
+            <div class="tarjeta-blanca">
+                <div class="seccion-titulo">Tus Datos</div>
+                <label>Nombre Comercial o Apellido</label>
+                <input type="text" id="nombre_comercial" placeholder="Ej: Materiales San Juan">
+
+                <label>Teléfono (WhatsApp de contacto)</label>
+                <input type="number" id="telefono_whatsapp" placeholder="Ej: 1123456789">
+                
+                <label>Ubicación (Provincia)</label>
+                <select id="provincia">
+                    <option value="Buenos Aires">Buenos Aires</option>
+                    <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
+                    <option value="Catamarca">Catamarca</option>
+                    <option value="Chaco">Chaco</option>
+                    <option value="Chubut">Chubut</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Corrientes">Corrientes</option>
+                    <option value="Entre Ríos">Entre Ríos</option>
+                    <option value="Formosa">Formosa</option>
+                    <option value="Jujuy">Jujuy</option>
+                    <option value="La Pampa">La Pampa</option>
+                    <option value="La Rioja">La Rioja</option>
+                    <option value="Mendoza">Mendoza</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Neuquén">Neuquén</option>
+                    <option value="Río Negro">Río Negro</option>
+                    <option value="Salta">Salta</option>
+                    <option value="San Juan">San Juan</option>
+                    <option value="San Luis">San Luis</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Santa Fe">Santa Fe</option>
+                    <option value="Santiago del Estero">Santiago del Estero</option>
+                    <option value="Tierra del Fuego">Tierra del Fuego</option>
+                    <option value="Tucumán">Tucumán</option>
+                </select>
+
+                <label>Localidad / Ciudad</label>
+                <input type="text" id="ciudad" placeholder="Ej: Morón, Rosario, Godoy Cruz...">
+            </div>
+
+            <div class="tarjeta-blanca">
+                <div class="seccion-titulo">¿Qué ofrecés?</div>
+                
+                <label>CATEGORÍA DE SUSCRIPCIÓN</label>
+                <select id="categoria" onchange="actualizarEspecialidades()">
+                    <option value="materiales">Venta de Materiales (Corralones/Comercios)</option>
+                    <option value="profesionales">Profesionales (Arquitectos/Ingenieros)</option>
+                    <option value="mano_obra">Mano de Obra / Oficios Especializados</option>
+                </select>
+
+                <label>Especialidad Principal</label>
+                <select id="especialidad">
+                    </select>
+            </div>
+            
+        </div>
+
+        <div class="barra-inferior">
+            <button id="btn-suscribir" class="btn-mercadopago" onclick="procesarPago()">
+                Suscribirme con 
+                <span style="display: flex; align-items: center; margin-left: 2px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                        <path d="m11 17 2 2a1 1 0 1 0 3-3"/>
+                        <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-7.3 7.3a1 1 0 0 0 0 1.42l.33.33a1 1 0 0 0 1.42 0L11 17"/>
+                        <path d="m10 9-1.5-1.5a3 3 0 0 0-4.24 0l-1.57 1.57a1 1 0 0 0 0 1.42l.33.33a1 1 0 0 0 1.42 0L6 9.29"/>
+                        <path d="m7 12 1.5 1.5"/><path d="m8 11 1.5 1.5"/><path d="m9 10 1.5 1.5"/>
+                    </svg>
+                    <span style="font-family: Arial, sans-serif; font-weight: 500; font-size: 15px; text-transform: lowercase; letter-spacing: -0.5px;">mercado</span>
+                    <span style="font-family: Arial, sans-serif; font-weight: 900; font-size: 15px; text-transform: lowercase; letter-spacing: -0.5px;">pago</span>
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
+        const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
+
+        const linksMercadoPago = {
+            "materiales": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470",
+            "mano_obra": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93",
+            "profesionales": "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=cf1a6b0c2a8f47c3b2f59f8c6e2a14e9"
+        };
+
+        const rubros = {
+            materiales: [
+                { valor: "electricidad", texto: "Casas de Electricidad" },
+                { valor: "sanitaria", texto: "Sanitarios y Cañerías" },
+                { valor: "mamposteria", texto: "Corralón (Áridos y Ladrillos)" },
+                { valor: "hormigon", texto: "Hormigoneras y Hierros" },
+                { valor: "seco", texto: "Construcción en Seco (Placas)" },
+                { valor: "techos", texto: "Madereras y Zinguerías" }
+            ],
+            profesionales: [
+                { valor: "arquitecto", texto: "Arquitecto/a" },
+                { valor: "ingeniero", texto: "Ingeniero/a Civil" },
+                { valor: "maestro_mayor", texto: "Maestro Mayor de Obra" }
+            ],
+            mano_obra: [
+                { valor: "mano_obra_mamposteria", texto: "Albañiles Generales" },
+                { valor: "mano_obra_hormigon", texto: "Estructuristas y Encofradores" },
+                { valor: "mano_obra_electricidad", texto: "Electricistas Matriculados" },
+                { valor: "mano_obra_sanitaria", texto: "Plomeros y Gasistas" },
+                { valor: "mano_obra_seco", texto: "Durleros y Armadores" },
+                { valor: "mano_obra_techos", texto: "Techistas y Carpinteros de Obra" }
+            ]
+        };
+
+        function actualizarEspecialidades() {
+            const cat = document.getElementById('categoria').value;
+            const selectEsp = document.getElementById('especialidad');
+            selectEsp.innerHTML = '';
+            rubros[cat].forEach(esp => {
+                selectEsp.add(new Option(esp.texto, esp.valor));
+            });
+        }
+
+        async function procesarPago() {
+            const boton = document.getElementById('btn-suscribir');
+            const nombre = document.getElementById('nombre_comercial').value.trim();
+            const telefono = document.getElementById('telefono_whatsapp').value.trim();
+            const provincia = document.getElementById('provincia').value;
+            const ciudad = document.getElementById('ciudad').value.trim();
+            const categoria = document.getElementById('categoria').value;
+            const rubro_especifico = document.getElementById('especialidad').value;
+
+            if (nombre === "" || telefono === "" || ciudad === "") {
+                alert("Por favor, completá tu nombre, teléfono y ciudad para poder ubicarte.");
+                return;
+            }
+
+            boton.disabled = true;
+            boton.innerHTML = "PROCESANDO... ⏳";
+
+            try {
+                const vendedor = localStorage.getItem('yocalculo_vendedor_id') || "DIRECTO_APP";
+
+                const { data, error } = await supabaseClient
+                    .from('proveedores')
+                    .insert([
+                        { 
+                            nombre_comercial: nombre, 
+                            telefono_whatsapp: telefono,
+                            provincia: provincia,
+                            localidad: ciudad,
+                            categoria: categoria,
+                            rubro_especifico: rubro_especifico,
+                            estado_suscripcion: 'pendiente', 
+                            vendedor_id: vendedor
+                        }
+                    ]);
+
+                if (error) console.error("Error al registrar en Supabase:", error);
+
+                const linkDestino = linksMercadoPago[categoria];
+                document.getElementById('nombre_comercial').value = "";
+                document.getElementById('telefono_whatsapp').value = "";
+                document.getElementById('ciudad').value = "";
+                
+                window.location.href = linkDestino;
+
+            } catch (err) {
+                console.error("Error general:", err);
+                alert("Hubo un problema de conexión. Intentalo nuevamente.");
+                boton.disabled = false;
+                boton.innerHTML = "Suscribirme con Mercado Pago";
+            }
+        }
+
+        actualizarEspecialidades();
+    </script>
+</body>
+</html>
