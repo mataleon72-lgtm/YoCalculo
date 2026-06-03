@@ -484,14 +484,57 @@
             document.getElementById('loader-precios').style.display = 'block';
 
             try {
-                // CORREGIDO: Buscamos apuntando exactamente a la etiqueta unificada 'corralon'
+                // MODIFICADO: Apunta a 'corralón' con tilde exacta tal como figura en tu base de datos
                 const { data: corralones, error } = await supabaseClient
                     .from('proveedores')
                     .select('*')
-                    .eq('rubro_especifico', 'corralon')
+                    .eq('rubro_especifico', 'corralón')
                     .eq('estado_suscripcion', 'activa');
 
                 if (error) throw error;
+
+                function limpiarAcentos(texto) {
+                    if (!texto) return "";
+                    return texto.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                }
+
+                const matData = (corralones || []).filter(p => 
+                    limpiarAcentos(p.localidad || "") === localidad_escrita &&
+                    p.provincia === provincia_seleccionada
+                );
+
+                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
+                contenedor.innerHTML = ""; 
+
+                let htmlMat = "";
+                if (matData.length > 0) {
+                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">🧱 CORRALONES DESTACADOS</div>`;
+                    matData.forEach(prov => {
+                        const telWpp = prov.telefono_whatsapp || "";
+                        htmlMat += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${telWpp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
+                            </div>`;
+                    });
+                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos corralón? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni caleras destacadas aquí para esta localidad.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
+                }
+
+                contenedor.innerHTML = htmlMat;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
+            }
+
+            document.getElementById('form-cotizador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'block';
+            cambiarPantalla('pantalla-precio-final');
+        }
 
                 function limpiarAcentos(texto) {
                     if (!texto) return "";
