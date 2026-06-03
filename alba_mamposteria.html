@@ -199,12 +199,10 @@
         </div>
     </div>
 <script>
-        // --- CONEXIÓN MOTOR SUPABASE ---
         const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
         const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
 
-        // Variables globales
         var globalTotalLadrillos = 0; var globalTotalCementoBolsas = 0; var globalTotalCalBolsas = 0;
         var globalTotalArenaM3 = 0; var globalTotalCascoteM3 = 0; var globalTotalPegamentoKg = 0;
         var globalTotalYesoBolsas = 0; var globalAreaNetaMuro = 0;
@@ -321,7 +319,7 @@
             var lineaYeso = itemB_YesoBolsas > 0 ? `<li><span>Yeso Alfarero Interno (30kg)</span> <span class="destacado">${itemB_YesoBolsas} Bolsas</span></li>` : '' ;
             var lineaCemRevoque = itemB_CementoBolsas > 0 ? `<li><span>Cemento para Revoques (50kg)</span> <span class="destacado">${itemB_CementoBolsas} Bolsas</span></li>` : '';
             var lineaCalRevoque = itemB_CalBolsas > 0 ? `<li><span>Cal para Revoques (20kg)</span> <span class="destacado">${itemB_CalBolsas} Bolsas</span></li>` : '';
-            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaM3} m³</span></li>` : '';
+            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaRevoque} m³</span></li>` : '';
             var notaCerecita = revoqueExt === 'hidrofugo' ? '<li><span>Nota técnica para el Cliente:</span> <span style="font-size:11px; color:#27AE60; font-weight:bold;">Aislación Hidrófuga \"Cerecita\" incluida.</span></li>' : '';
 
             var htmlDesglose = `
@@ -433,7 +431,7 @@
 
         function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
             if(textoPedidoWhatsAppMaster === "") { alert("No hay pliego activo."); return; }
-            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telephoneProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
+            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
             window.open(urlWhatsappNativa, '_blank');
         }
 
@@ -465,7 +463,13 @@
 
         async function mostrarProveedores() {
             var provincia_seleccionada = document.getElementById('provincia_obra').value;
-            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase();
+            
+            // 1. Limpiamos espacios, pasamos a mayúsculas y DESTRUIMOS acentos del input de la app
+            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            console.log("🔍 Buscando Localidad en la App:", localidad_escrita);
+            console.log("📍 Provincia Seleccionada:", provincia_seleccionada);
 
             if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad de la obra."); return; }
 
@@ -479,8 +483,27 @@
                     supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_mamposteria').eq('estado_suscripcion', 'activa')
                 ]);
 
-                const matData = (resMateriales.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
-                const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
+                console.log("📥 Datos crudos bajados de Supabase (Materiales):", resMateriales.data);
+
+                // 2. FUNCIÓN MAESTRA: Limpia acentos de cualquier texto para comparar parejo
+                function limpiarAcentos(texto) {
+                    if (!texto) return "";
+                    return texto.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                }
+
+                // 3. Filtramos comparando ambos lados limpios de acentos y con la provincia exacta
+                const matData = (resMateriales.data || []).filter(p => {
+                    var locBase = limpiarAcentos(p.localidad);
+                    console.log(`⚖️ Comparando base [${locBase}] contra input [${localidad_escrita}]`);
+                    return locBase === localidad_escrita && p.provincia === provincia_seleccionada;
+                });
+                
+                const moData = (resManoObra.data || []).filter(p => 
+                    limpiarAcentos(p.localidad) === localidad_escrita && 
+                    p.provincia === provincia_seleccionada
+                );
+
+                console.log("🎯 Resultados finales después del filtro de zona:", matData);
 
                 const contenedor = document.getElementById('contenedor-dinamico-proveedores');
                 contenedor.innerHTML = ""; 
@@ -498,6 +521,7 @@
                     });
                     htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos corralón? Suscribite acá</a></div></div>`;
                 } else {
+                    console.log("⚠️ Alerta: MatData vino vacío. Mostrando cartel de Zona Libre.");
                     htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni caleras destacadas aquí.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
                 }
 
@@ -519,8 +543,8 @@
 
                 contenedor.innerHTML = htmlMat + htmlMo;
             } catch (err) {
-                console.error(err);
-                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
+                console.error("💥 ERROR CRÍTICO CAPTURADO EN EL CATCH:", err);
+                document.getElementById('contenedor-dynamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
             }
 
             document.getElementById('form-cotizador').style.display = 'block'; 
