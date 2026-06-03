@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>YOCALCULO - Buscador de Mano de Obra</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).supabase={})}(this,(function(e){"use strict";const t="2.39.8";class s{constructor(e,t){this.supabaseUrl=e,this.supabaseKey=t}from(e){return{select:(t)=>({eq:(t,s)=>({eq:(s,r)=>({then:async(s)=>{try{let r=await fetch(`${this.supabaseUrl}/rest/v1/${e}?select=*&${t}=eq.${encodeURIComponent(s)}&${t}=eq.${encodeURIComponent(r)}`,{method:"GET",headers:{apikey:this.supabaseKey,Authorization:`Bearer ${this.supabaseKey}`}});if(!r.ok)throw new Error("Error en servidor");let o=await r.json();s({data:o,error:null})}catch(e){s({data:null,error:e})}}})})})}}}e.createClient=function(e,t){return new s(e,t)},e.version=t,Object.defineProperty(e,"__esModule",{value:!0})}));</script>
+
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
         .contenedor-app { position: relative; height: 100dvh; width: 100%; max-width: 432px; max-height: 960px; background-color: #F4F5F7; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
@@ -65,8 +67,10 @@
     </div>
     <script>
         const SUPABASE_URL = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        
+        // Inicialización directa usando el motor inyectado
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function limpiarTexto(txt) {
             if (!txt) return "";
@@ -75,7 +79,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function buscarManoObra() {
             const contenedor = document.getElementById('resultados');
-            contenedor.innerHTML = '<p style="text-align:center; color:#7A7A7A; font-weight:bold;">Conectando...</p>';
+            contenedor.innerHTML = '<p style="text-align:center; color:#7A7A7A; font-weight:bold;">Conectando con Supabase...</p>';
 
             const rubroSeleccionado = document.getElementById('select-oficio').value;
             const localidadIngresada = limpiarTexto(document.getElementById('input-localidad').value);
@@ -84,16 +88,17 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             if(!localidadIngresada) { alert("Por favor, ingresá una localidad."); contenedor.innerHTML=""; return; }
 
             try {
-                // Modificado: Trae los activos del rubro específico exacto ('manoobra')
-                const { data: proveedores, error } = await supabaseClient
-                    .from('proveedores')
-                    .select('*')
-                    .eq('rubro_especifico', rubroSeleccionado)
-                    .eq('estado_suscripcion', 'activa');
+                // Consulta directa y blindada a tu API REST de Supabase
+                let urlConsulta = `${SUPABASE_URL}/rest/v1/proveedores?rubro_specifico=eq.${rubroSeleccionado}&estado_suscripcion=eq.activa`;
+                
+                let respuesta = await fetch(urlConsulta, {
+                    method: "GET",
+                    headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
+                });
 
-                if (error) throw error;
+                if (!respuesta.ok) throw new Error("Error de red");
+                const proveedores = await respuesta.json();
 
-                // Modificado: Mapeo estricto con las columnas reales de tu DB (localidad y provincia)
                 const filtrados = (proveedores || []).filter(p => {
                     const locBase = limpiarTexto(p.localidad || "");
                     const provBase = limpiarTexto(p.provincia || "");
@@ -109,7 +114,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 filtrados.forEach(p => {
                     const tarjeta = document.createElement('div');
                     tarjeta.className = 'tarjeta-proveedor';
-                    const telDestino = p.telefono_whatsapp || "";
+                    const telDestino = p.telefono_whatsapp || p.telefono || "";
                     const msg = encodeURIComponent(`Hola ${p.nombre_comercial}, te encontré en YOCALCULO y necesito un presupuesto.`);
                     const urlWpp = `https://api.whatsapp.com/send?phone=${telDestino}&text=${msg}`;
 
