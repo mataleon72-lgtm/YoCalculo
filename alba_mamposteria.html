@@ -89,7 +89,7 @@
                 </div>
 
                 <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Dimensions del Muro</div>
+                    <div class="seccion-titulo">Dimensiones del Muro</div>
                     <div class="grid-2">
                         <div><label>Largo (m)</label><input type="number" id="largo" placeholder="0.00" step="0.1"></div>
                         <div><label>Alto (m)</label><input type="number" id="alto" placeholder="0.00" step="0.1"></div>
@@ -199,12 +199,12 @@
         </div>
     </div>
 <script>
-        // --- 1. CONEXIÓN EXCLUSIVA E INDEPENDIENTE CON EL MOTOR SUPABASE ---
+        // --- CONEXIÓN MOTOR SUPABASE ---
         const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
         const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
 
-        // Variables globales de acumulación comercial consolidadas
+        // Variables globales
         var globalTotalLadrillos = 0; var globalTotalCementoBolsas = 0; var globalTotalCalBolsas = 0;
         var globalTotalArenaM3 = 0; var globalTotalCascoteM3 = 0; var globalTotalPegamentoKg = 0;
         var globalTotalYesoBolsas = 0; var globalAreaNetaMuro = 0;
@@ -321,7 +321,7 @@
             var lineaYeso = itemB_YesoBolsas > 0 ? `<li><span>Yeso Alfarero Interno (30kg)</span> <span class="destacado">${itemB_YesoBolsas} Bolsas</span></li>` : '' ;
             var lineaCemRevoque = itemB_CementoBolsas > 0 ? `<li><span>Cemento para Revoques (50kg)</span> <span class="destacado">${itemB_CementoBolsas} Bolsas</span></li>` : '';
             var lineaCalRevoque = itemB_CalBolsas > 0 ? `<li><span>Cal para Revoques (20kg)</span> <span class="destacado">${itemB_CalBolsas} Bolsas</span></li>` : '';
-            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaRevoque} m³</span></li>` : '';
+            var lineaArenaRevoque = itemB_ArenaM3 > 0 ? `<li><span>Arena para Revoques</span> <span class="destacado">${itemB_ArenaM3} m³</span></li>` : '';
             var notaCerecita = revoqueExt === 'hidrofugo' ? '<li><span>Nota técnica para el Cliente:</span> <span style="font-size:11px; color:#27AE60; font-weight:bold;">Aislación Hidrófuga \"Cerecita\" incluida.</span></li>' : '';
 
             var htmlDesglose = `
@@ -503,7 +503,7 @@
 
                 let htmlMo = "";
                 if (moData.length > 0) {
-                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;">👷‍♂️ ALBAÑILES Y CONSTRUCTORES</div>`;
+                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;"></div> 👷‍♂️ ALBAÑILES Y CONSTRUCTORES</div>`;
                     moData.forEach(prov => {
                         htmlMo += `
                             <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
