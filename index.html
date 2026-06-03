@@ -27,7 +27,7 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
         
-        /* --- 1. REGLA MAESTRA PARA COMPUTADORAS --- */
+        /* --- 1. CHASIS ULTRA-BLINDADO (FIJA LA PROPORCIÓN BASE) --- */
         .contenedor-app-yocalculo {
             position: relative; 
             height: 100vh; 
@@ -48,17 +48,18 @@
             box-shadow: 0px 10px 40px rgba(0,0,0,0.8); 
         }
 
-        /* --- 2. DETECTOR REAL PARA CELULARES (EVITA DESBORDES) --- */
+        /* --- 2. DETECTOR REAL PARA CELULARES (PROHIBIDO EL DESBORDE) --- */
         @media (max-width: 600px) {
             .contenedor-app-yocalculo {
-                max-width: none;     
-                max-height: none;    
-                aspect-ratio: auto;  
+                max-width: 432px;     
+                max-height: 960px;    
+                aspect-ratio: 432 / 960;  
                 width: 100vw;        
                 height: 100vh;      
                 height: 100dvh;      
                 box-shadow: none;    
-                background-size: 100% 100%;
+                background-size: contain; /* Bloquea el estiramiento deforme */
+                background-position: center;
             }
         }
         
@@ -108,7 +109,7 @@
         #video-intro { width: 100%; height: 100%; object-fit: cover; }
         .intro-oculta { opacity: 0; pointer-events: none; }
         
-        /* --- GRILLA DE BOTONES INVISIBLES --- */
+        /* --- GRILLA DE BOTONES INVISIBLES (PORCENTAJES ABSOLUTOS) --- */
         .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; z-index: 10; }
         
         .btn-electricidad { top: 23.7%; left: 5.0%;  width: 42.5%; height: 13.5%; }
