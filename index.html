@@ -1,237 +1,226 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <title>YOCALCULO - Menú Principal</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e1e24">
-    
-    <link rel="apple-touch-icon" href="icono.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="YOCALCULO">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <style>
-        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; height: 100dvh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif;}
-        
-        /* --- 1. REGLA PARA COMPUTADORAS --- */
+<title>YOCALCULO - Menú Principal</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e1e24">
+
+<link rel="apple-touch-icon" href="icono.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="YOCALCULO">
+
+<style>
+    body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; height: 100dvh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif;}
+    
+    /* --- 1. REGLA PARA COMPUTADORAS --- */
+    .contenedor-app-yocalculo {
+        position: relative; 
+        height: 100vh; 
+        height: 100dvh; 
+        max-height: 960px; 
+        width: 100%;
+        max-width: 432px;  
+        aspect-ratio: 432 / 960; 
+        background-image: url('fondo_index.jpg'); 
+        background-size: 100% 100%; 
+        background-position: center; 
+        background-repeat: no-repeat;
+        background-color: #F4F5F7; 
+        box-sizing: border-box; 
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0px 10px 40px rgba(0,0,0,0.8); 
+    }
+
+    /* --- 2. DETECTOR REAL PARA CELULARES --- */
+    @media (max-width: 600px) {
         .contenedor-app-yocalculo {
-            position: relative; 
-            height: 100dvh; 
-            max-height: 960px; 
-            width: 100%;
-            max-width: 432px;  
-            aspect-ratio: 432 / 960; 
-            background-image: url('fondo_index.jpg'); 
+            max-width: none;     
+            max-height: none;    
+            aspect-ratio: 432 / 960;  
+            width: 100vw;        
+            height: 100vh;      
+            height: 100dvh;      
+            box-shadow: none;    
             background-size: 100% 100%; 
-            background-position: center; 
-            background-repeat: no-repeat;
-            background-color: #F4F5F7; 
-            box-sizing: border-box; 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0px 10px 40px rgba(0,0,0,0.8); 
         }
+    }
+    
+    /* --- BARRA DE ESTADO --- */
+    .status-bar { 
+        position: absolute; 
+        top: 0; 
+        left: 0;
+        width: 100%;
+        background-color: transparent; 
+        height: 40px;
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0 16px; 
+        padding-top: env(safe-area-inset-top);
+        border-bottom: 1px solid rgba(235, 235, 235, 0.1); 
+        z-index: 20;
+        box-sizing: border-box;
+    }
+    .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+    
+    .status-left span {
+        color: #4B4B4D; 
+        font-weight: 800; 
+        font-size: 10px; 
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
 
-        /* --- 2. DETECTOR REAL PARA CELULARES --- */
-        @media (max-width: 600px) {
-            .contenedor-app-yocalculo {
-                max-width: none;     
-                max-height: none;    
-                aspect-ratio: auto;  
-                width: 100vw;        
-                height: 100dvh;      
-                box-shadow: none;    
-                background-size: 100% 100%; 
-            }
-        }
-        
-        /* --- BARRA DE ESTADO CORREGIDA --- */
-        .status-bar { 
-            position: absolute; 
-            top: 0; 
-            left: 0;
-            width: 100%;
-            background-color: transparent; 
-            height: 40px;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 0 16px; 
-            padding-top: env(safe-area-inset-top);
-            border-bottom: 1px solid rgba(235, 235, 235, 0.1); 
-            z-index: 20;
-            box-sizing: border-box;
-        }
-        .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
-        
-        .status-left span {
-            color: #4B4B4D; 
-            font-weight: 800; 
-            font-size: 10px; 
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+    /* ANIMACIÓN DE CAMPANA */
+    @keyframes tintineo {
+        0% { transform: rotate(0); }
+        10% { transform: rotate(15deg); }
+        20% { transform: rotate(-10deg); }
+        30% { transform: rotate(5deg); }
+        40% { transform: rotate(-5deg); }
+        50% { transform: rotate(0); }
+        100% { transform: rotate(0); }
+    }
+    .campana-animada {
+        animation: tintineo 2.5s ease-in-out infinite;
+        transform-origin: top center;
+    }
 
-        /* ANIMACIÓN DE CAMPANA */
-        @keyframes tintineo {
-            0% { transform: rotate(0); }
-            10% { transform: rotate(15deg); }
-            20% { transform: rotate(-10deg); }
-            30% { transform: rotate(5deg); }
-            40% { transform: rotate(-5deg); }
-            50% { transform: rotate(0); }
-            100% { transform: rotate(0); }
-        }
-        .campana-animada {
-            animation: tintineo 2.5s ease-in-out infinite;
-            transform-origin: top center;
-        }
+    #pantalla-intro { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #F4F5F7; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.6s ease-out; }
+    #video-intro { width: 100%; height: 100%; object-fit: cover; }
+    .intro-oculta { opacity: 0; pointer-events: none; }
+    
+    /* --- GRILLA DE BOTONES INVISIBLES --- */
+    .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; z-index: 10; }
+    
+    .btn-electricidad { top: 23.7%; left: 5.0%;  width: 42.5%; height: 13.5%; }
+    .btn-sanitaria    { top: 23.7%; left: 52.5%; width: 42.5%; height: 13.5%; }
+    .btn-mamposteria  { top: 39.2%; left: 5.0%;  width: 42.5%; height: 13.5%; }
+    .btn-hormigon     { top: 39.2%; left: 52.5%; width: 42.5%; height: 13.5%; }
+    .btn-seco         { top: 55.2%; left: 5.0%;  width: 42.5%; height: 13.5%; }
+    .btn-techos       { top: 55.2%; left: 52.5%; width: 42.5%; height: 13.5%; }
+    .btn-profesionales{ top: 71.2%; left: 5.0%;  width: 90.0%; height: 13.5%; }
+    
+    .btn-quiero-proveedor { bottom: 0; left: 0; width: 50%; height: 9.5%; z-index: 15; }
+    .btn-quiero-publicitar { bottom: 0; left: 50%; width: 50%; height: 9.5%; z-index: 15; }
 
-        #pantalla-intro { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #F4F5F7; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.6s ease-out; }
-        #video-intro { width: 100%; height: 100%; object-fit: cover; }
-        .intro-oculta { opacity: 0; pointer-events: none; }
-        
-        /* --- GRILLA DE BOTONES INVISIBLES --- */
-        .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; z-index: 10; }
-        
-        .btn-electricidad { top: 23.7%; left: 5.0%;  width: 42.5%; height: 13.5%; }
-        .btn-sanitaria    { top: 23.7%; left: 52.5%; width: 42.5%; height: 13.5%; }
-        .btn-mamposteria  { top: 39.2%; left: 5.0%;  width: 42.5%; height: 13.5%; }
-        .btn-hormigon     { top: 39.2%; left: 52.5%; width: 42.5%; height: 13.5%; }
-        .btn-seco         { top: 55.2%; left: 5.0%;  width: 42.5%; height: 13.5%; }
-        .btn-techos       { top: 55.2%; left: 52.5%; width: 42.5%; height: 13.5%; }
-        .btn-profesionales{ top: 71.2%; left: 5.0%;  width: 90.0%; height: 13.5%; }
-        
-        .btn-quiero-proveedor { bottom: 0; left: 0; width: 50%; height: 9.5%; z-index: 15; }
-        .btn-quiero-publicitar { bottom: 0; left: 50%; width: 50%; height: 9.5%; z-index: 15; }
-
-        #banner-instalacion {
-            position: absolute;
-            top: 85px; 
-            left: 5%;
-            width: 90%;
-            background: linear-gradient(135deg, #FBDD23 0%, #f1c40f 100%); 
-            border-radius: 16px; 
-            box-shadow: 0 12px 30px rgba(0,0,0,0.5); 
-            display: none; 
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 200; 
-            border: none;
-        }
-        #texto-banner { margin: 0 0 15px 0; font-size: 15px; color: #1e1e24; font-weight: 800; text-align: center; line-height: 1.3; }
-        .btn-instalar-gigante { background-color: #1e1e24; color: #FBDD23; border: none; padding: 14px; font-size: 16px; font-weight: 900; text-transform: uppercase; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.1s; }
-        .btn-instalar-gigante:active { transform: scale(0.98); }
-        .btn-cerrar-banner { background: transparent; color: #4B4B4D; border: none; font-size: 12px; margin-top: 10px; font-weight: 700; cursor: pointer; }
-        .tooltip-flecha { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid #f1c40f; margin: 0 auto; display: none; }
-    </style>
-</head>
-<body>
-    <div class="contenedor-app-yocalculo">
-        
-        <div class="status-bar">
-            <div class="status-left">
-                <svg class="campana-animada" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-                <span>CALCULANDO EN LÍNEA...</span>
-            </div>
-            <div class="status-right">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text></svg>
-            </div>
+    #banner-instalacion {
+        position: absolute;
+        top: 85px; 
+        left: 5%;
+        width: 90%;
+        background: linear-gradient(135deg, #FBDD23 0%, #f1c40f 100%); 
+        border-radius: 16px; 
+        box-shadow: 0 12px 30px rgba(0,0,0,0.5); 
+        display: none; 
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+        z-index: 200; 
+        border: none;
+    }
+    #texto-banner { margin: 0 0 15px 0; font-size: 15px; color: #1e1e24; font-weight: 800; text-align: center; line-height: 1.3; }
+    .btn-instalar-gigante { background-color: #1e1e24; color: #FBDD23; border: none; padding: 14px; font-size: 16px; font-weight: 900; text-transform: uppercase; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.1s; }
+    .btn-instalar-gigante:active { transform: scale(0.98); }
+    .btn-cerrar-banner { background: transparent; color: #4B4B4D; border: none; font-size: 12px; margin-top: 10px; font-weight: 700; cursor: pointer; }
+    .tooltip-flecha { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid #f1c40f; margin: 0 auto; display: none; }
+</style>
+    <div class="status-bar">
+        <div class="status-left">
+            <svg class="campana-animada" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span>CALCULANDO EN LÍNEA...</span>
         </div>
-        
-        <div id="banner-instalacion">
-            <p id="texto-banner"></p>
-            <button id="btn-instalar" class="btn-instalar-gigante">Instalar App</button>
-            <button id="btn-cerrar" class="btn-cerrar-banner">Cerrar</button>
-            <div id="flecha-ios" class="tooltip-flecha"></div>
+        <div class="status-right">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text></svg>
         </div>
-
-        <div id="pantalla-intro"><video id="video-intro" src="intro.mp4" muted playsinline></video></div>
-
-        <button class="zona-click btn-electricidad"  onclick="efectoToque('boton_electricidad.jpg', 'electricidad.html')"></button>
-        <button class="zona-click btn-sanitaria"     onclick="efectoToque('boton_sanitaria.jpg', 'sanitarios_agua.html')"></button>
-        <button class="zona-click btn-mamposteria"   onclick="efectoToque('boton_mamposteria.jpg', 'alba_mamposteria.html')"></button>
-        <button class="zona-click btn-hormigon"      onclick="efectoToque('boton_hormigon.jpg', 'alba_hormigon.html')"></button>
-        <button class="zona-click btn-seco"          onclick="efectoToque('boton_seco.jpg', 'seco.html')"></button>
-        <button class="zona-click btn-techos"        onclick="efectoToque('boton_techos.jpg', 'alba_techos.html')"></button>
-        <button class="zona-click btn-profesionales" onclick="efectoToque('boton_profesionales.jpg', 'registro_profesionales.html')"></button>
-        
-        <button class="zona-click btn-quiero-proveedor"  onclick="efectoToque('boton_proveedor.jpg', 'proveedores.html')"></button>
-        <button class="zona-click btn-quiero-publicitar" onclick="dispararWhatsAppComercial()"></button>
+    </div>
+    
+    <div id="banner-instalacion">
+        <p id="texto-banner"></p>
+        <button id="btn-instalar" class="btn-instalar-gigante">Instalar App</button>
+        <button id="btn-cerrar" class="btn-cerrar-banner">Cerrar</button>
+        <div id="flecha-ios" class="tooltip-flecha"></div>
     </div>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(function() { console.log("Motor PWA activo."); });
+    <div id="pantalla-intro"><video id="video-intro" src="intro.mp4" muted playsinline></video></div>
+
+    <button class="zona-click btn-electricidad"  onclick="efectoToque('boton_electricidad.jpg', 'electricidad.html')"></button>
+    <button class="zona-click btn-sanitaria"     onclick="efectoToque('boton_sanitaria.jpg', 'sanitarios_agua.html')"></button>
+    <button class="zona-click btn-mamposteria"   onclick="efectoToque('boton_mamposteria.jpg', 'alba_mamposteria.html')"></button>
+    <button class="zona-click btn-hormigon"      onclick="efectoToque('boton_hormigon.jpg', 'alba_hormigon.html')"></button>
+    <button class="zona-click btn-seco"          onclick="efectoToque('boton_seco.jpg', 'seco.html')"></button>
+    <button class="zona-click btn-techos"        onclick="efectoToque('boton_techos.jpg', 'alba_techos.html')"></button>
+    <button class="zona-click btn-profesionales" onclick="efectoToque('boton_profesionales.jpg', 'registro_profesionales.html')"></button>
+    
+    <button class="zona-click btn-quiero-proveedor"  onclick="efectoToque('boton_proveedor.jpg', 'proveedores.html')"></button>
+    <button class="zona-click btn-quiero-publicitar" onclick="dispararWhatsAppComercial()"></button>
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(function() { console.log("Motor PWA activo."); });
+    }
+
+    // --- BLINDAJE ANTI-COPIAS ---
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    document.addEventListener('keydown', function(e) {
+        if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74))) {
+            e.preventDefault();
+        }
+    });
+
+    function efectoToque(imagenSombra, paginaDestino) {
+        var contenedor = document.querySelector('.contenedor-app-yocalculo');
+        contenedor.style.backgroundImage = "url('" + imagenSombra + "')";
+        setTimeout(function() { location.href = paginaDestino; }, 120);
+    }
+
+    function dispararWhatsAppComercial() {
+        var nroSocio = "5491150004765"; 
+        var msg = "Hola! Me interesa pautar un espacio publicitario estático en las pantallas de cómputos de YOCALCULO. Solicito bases comerciales.";
+        window.open("[https://api.whatsapp.com/send?phone=](https://api.whatsapp.com/send?phone=)" + nroSocio + "&text=" + encodeURIComponent(msg), '_blank');
+    }
+
+    // --- CONTADOR ESTRATÉGICO ---
+    function simularUsuariosActivos() {
+        var numeroFiel = 21 + Math.floor(Math.random() * 13); 
+        var selectorTexto = document.querySelector('.status-bar span');
+        if(selectorTexto) {
+            selectorTexto.innerHTML = `${numeroFiel} CONSTRUCTORES EN LÍNEA...`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const pantallaIntro = document.getElementById('pantalla-intro');
+        const video = document.getElementById('video-intro');
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // --- EL RADAR INVISIBLE DE VENTAS ---
+        const codigoVendedor = urlParams.get('ref');
+        if (codigoVendedor) {
+            localStorage.setItem('yocalculo_vendedor_id', codigoVendedor.toUpperCase());
+            console.log("Vendedor trackeado:", codigoVendedor.toUpperCase());
         }
 
-        // --- BLINDAJE ANTI-COPIAS ---
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74))) {
-                e.preventDefault();
-            }
-        });
+        simularUsuariosActivos(); 
 
-        function efectoToque(imagenSombra, paginaDestino) {
-            var contenedor = document.querySelector('.contenedor-app-yocalculo');
-            contenedor.style.backgroundImage = "url('" + imagenSombra + "')";
-            setTimeout(function() { location.href = paginaDestino; }, 120);
-        }
+        setTimeout(simularUsuariosActivos, 6000); 
+        setInterval(simularUsuariosActivos, 120000); 
 
-        function dispararWhatsAppComercial() {
-            var nroSocio = "5491150004765"; 
-            var msg = "Hola! Me interesa pautar un espacio publicitario estático en las pantallas de cómputos de YOCALCULO. Solicito bases comerciales.";
-            window.open("https://api.whatsapp.com/send?phone=" + nroSocio + "&text=" + encodeURIComponent(msg), '_blank');
-        }
-
-        // --- CONTADOR ESTRATÉGICO ---
-        function simularUsuariosActivos() {
-            var numeroFiel = 21 + Math.floor(Math.random() * 13); 
-            var selectorTexto = document.querySelector('.status-bar span');
-            if(selectorTexto) {
-                selectorTexto.innerHTML = `${numeroFiel} CONSTRUCTORES EN LÍNEA...`;
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const pantallaIntro = document.getElementById('pantalla-intro');
-            const video = document.getElementById('video-intro');
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            // --- EL RADAR INVISIBLE DE VENTAS ---
-            // Leemos si la URL tiene un "?ref=ALGO" (ej: yocalculo.app/?ref=VEND01)
-            const codigoVendedor = urlParams.get('ref');
-            if (codigoVendedor) {
-                // Lo guardamos en la memoria permanente del navegador
-                localStorage.setItem('yocalculo_vendedor_id', codigoVendedor.toUpperCase());
-                console.log("Vendedor trackeado:", codigoVendedor.toUpperCase());
-            }
-
-            simularUsuariosActivos(); 
-
-            setTimeout(simularUsuariosActivos, 6000); 
-            setInterval(simularUsuariosActivos, 120000); 
-
-            if (urlParams.get('skip') !== '1' && !sessionStorage.getItem('introVisto')) {
-                sessionStorage.setItem('introVisto', 'true');
-                video.play();
-                video.addEventListener('ended', function() {
-                    pantallaIntro.classList.add('intro-oculta');
-                    setTimeout(function() { pantallaIntro.style.display = 'none'; }, 600);
-                });
-            } else { pantallaIntro.style.display = 'none'; }
-        });
-    </script>
-</body>
-</html>
+        if (urlParams.get('skip') !== '1' && !sessionStorage.getItem('introVisto')) {
+            sessionStorage.setItem('introVisto', 'true');
+            video.play();
+            video.addEventListener('ended', function() {
+                pantallaIntro.classList.add('intro-oculta');
+                setTimeout(function() { pantallaIntro.style.display = 'none'; }, 600);
+            });
+        } else { pantallaIntro.style.display = 'none'; }
+    });
+</script>
