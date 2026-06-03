@@ -455,23 +455,75 @@
 
         async function mostrarProveedores() {
             var provincia_seleccionada = document.getElementById('provincia_obra').value;
-            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            var localidad_bruta = document.getElementById('localidad_obra').value;
 
-            if (localidad_escrita === "") { alert("Por favor escribí la localidad de la obra."); return; }
+            if (localidad_bruta.trim() === "") { alert("Por favor escribí la localidad de la obra."); return; }
 
             document.getElementById('form-cotizador').style.display = 'none'; 
             document.getElementById('btn-buscar-precios').style.display = 'none'; 
             document.getElementById('loader-precios').style.display = 'block';
 
             try {
+                // Función que limpia TODO: acentos, mayúsculas y espacios basura
+                function limpiarAcentos(texto) {
+                    if (!texto) return "";
+                    return texto.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                }
+
+                var localidad_escrita = limpiarAcentos(localidad_bruta);
+                var provincia_limpia = limpiarAcentos(provincia_seleccionada);
+
+                // Traemos todos los proveedores ACTIVOS y los filtramos acá para que el servidor no se maree con los acentos
                 const { data: corralones, error } = await supabaseClient
                     .from('proveedores')
                     .select('*')
-                    .eq('rubro_especifico', 'corralón')
                     .eq('estado_suscripcion', 'activa');
 
                 if (error) throw error;
+
+                // El filtro milimétrico: compara rubro, provincia y localidad totalmente limpios
+                const matData = (corralones || []).filter(p => {
+                    const rubroBase = limpiarAcentos(p.rubro_especifico);
+                    const locBase = limpiarAcentos(p.localidad);
+                    const provBase = limpiarAcentos(p.provincia);
+                    
+                    return rubroBase.includes("CORRALON") && 
+                           locBase === localidad_escrita && 
+                           provBase === provincia_limpia;
+                });
+
+                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
+                contenedor.innerHTML = ""; 
+
+                let htmlMat = "";
+                if (matData.length > 0) {
+                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">🧱 CORRALONES DESTACADOS</div>`;
+                    matData.forEach(prov => {
+                        htmlMat += `
+                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
+                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
+                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
+                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
+                            </div>`;
+                    });
+                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos corralón? Suscribite acá</a></div></div>`;
+                } else {
+                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni caleras destacadas aquí para esta localidad.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
+                }
+
+                contenedor.innerHTML = htmlMat;
+
+            } catch (err) {
+                console.error("Error Supabase:", err);
+                const msg = err.message || JSON.stringify(err);
+                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<div class="tarjeta-zona-libre" style="border-color:red; background:#ffecec;"><h3 style="color:red;">Error</h3><p style="font-size:11px; color:#333;">${msg}</p></div>`;
+            }
+
+            document.getElementById('form-cotizador').style.display = 'block'; 
+            document.getElementById('loader-precios').style.display = 'none'; 
+            document.getElementById('btn-buscar-precios').style.display = 'block';
+            cambiarPantalla('pantalla-precio-final');
+        }
 
                 function limpiarAcentos(texto) {
                     if (!texto) return "";
