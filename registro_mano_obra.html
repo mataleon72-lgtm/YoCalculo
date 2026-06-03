@@ -104,8 +104,38 @@
             </div>
 
             <div class="campo-grupo">
+                <label>Provincia</label>
+                <select id="select-provincia">
+                    <option value="Buenos Aires">Buenos Aires</option>
+                    <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
+                    <option value="Catamarca">Catamarca</option>
+                    <option value="Chaco">Chaco</option>
+                    <option value="Chubut">Chubut</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Corrientes">Corrientes</option>
+                    <option value="Entre Ríos">Entre Ríos</option>
+                    <option value="Formosa">Formosa</option>
+                    <option value="Jujuy">Jujuy</option>
+                    <option value="La Pampa">La Pampa</option>
+                    <option value="La Rioja">La Rioja</option>
+                    <option value="Mendoza">Mendoza</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Neuquén">Neuquén</option>
+                    <option value="Río Negro">Río Negro</option>
+                    <option value="Salta">Salta</option>
+                    <option value="San Juan">San Juan</option>
+                    <option value="San Luis">San Luis</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Santa Fe">Santa Fe</option>
+                    <option value="Santiago del Estero">Santiago del Estero</option>
+                    <option value="Tierra del Fuego">Tierra del Fuego</option>
+                    <option value="Tucumán">Tucumán</option>
+                </select>
+            </div>
+
+            <div class="campo-grupo">
                 <label>¿Dónde es la obra? (Localidad)</label>
-                <input type="text" id="input-localidad" placeholder="Ej: Villa Raffo, Saenz Peña..." value="VILLA RAFFO">
+                <input type="text" id="input-localidad" placeholder="Ej: Morón, San Isidro, Rosario...">
             </div>
 
             <button class="btn-buscar" onclick="buscarManoObra()">Buscar Especialistas</button>
@@ -116,7 +146,7 @@
 
     <script>
         const SUPABASE_URL = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function limpiarTexto(txt) {
@@ -130,6 +160,7 @@
 
             const rubroSeleccionado = document.getElementById('select-oficio').value;
             const localidadIngresada = limpiarTexto(document.getElementById('input-localidad').value);
+            const provinciaSeleccionada = limpiarTexto(document.getElementById('select-provincia').value);
 
             try {
                 const { data: proveedores, error } = await supabaseClient
@@ -141,8 +172,12 @@
                 if (error) throw error;
 
                 const filtrados = (proveedores || []).filter(p => {
-                    if (!p.localidad) return false;
-                    return limpiarTexto(p.localidad) === localidadIngresada;
+                    if (!p.localidad || !p.provincia) return false;
+                    
+                    const coincidenciaLocalidad = limpiarTexto(p.localidad) === localidadIngresada;
+                    const coincidenciaProvincia = limpiarTexto(p.provincia) === provinciaSeleccionada;
+                    
+                    return coincidenciaLocalidad && coincidenciaProvincia;
                 });
 
                 if (filtrados.length === 0) {
