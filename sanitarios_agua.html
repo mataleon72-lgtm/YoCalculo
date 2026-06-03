@@ -33,7 +33,7 @@
         input[type="number"]:focus, input[type="text"]:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .mapa-contenedor { position: relative; width: 100%; aspect-ratio: 591 / 1000; background-image: url('plano.jpg'); background-size: 100% 100%; background-position: center; border: 1px solid #EBEBEB; box-sizing: border-box; flex-shrink: 0; }
-        .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+        .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; z-index: 10; }
         .z-bano     { top: 31%; left: 15%; width: 26%; height: 11%; }
         .z-lavadero { top: 32%; left: 51%; width: 24%; height: 14%; }
         .z-cocina   { top: 43%; left: 15%; width: 28%; height: 9%; }
@@ -90,6 +90,12 @@
         <div id="pantalla-plano" class="pantalla activa">
             <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Instalación Sanitaria</h2></div>
             <div class="contenido-scroll">
+                <div class="tarjeta-blanca">
+                    <div class="seccion-titulo">Tus Datos</div>
+                    <label>Tu Nombre y Apellido</label>
+                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
+                </div>
+
                 <div class="tarjeta-blanca">
                     <div class="seccion-titulo">Infraestructura Externa</div>
                     <div class="grid-2">
@@ -214,7 +220,6 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DEL MOTOR SUPABASE ---
         const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
         const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
         const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
@@ -244,6 +249,7 @@
             textoPedidoWhatsAppMaster = "";
             textoArchivoDescargaMaster = "";
             document.getElementById('contador').innerText = "0";
+            document.getElementById('nombreUsuario').value = "";
             limpiarFormularioFisicoA0();
             cambiarPantalla('pantalla-plano');
             alert("¡Obra borrada! Todos los formularios regresaron a cero.");
@@ -308,6 +314,8 @@
 
         function computarTotal() {
             if(localesSanitarios.length === 0) { alert("Socio, tocá un local del plano primero para configurarlo."); return; }
+
+            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
 
             var distCalle = parseFloat(document.getElementById('distCalle').value) || 0;
             var altTanque = parseFloat(document.getElementById('altTanque').value) || 0;
@@ -388,17 +396,19 @@
                 <li><span>Cámara de Inspección PVC Hermética 60x60</span> <span class="destacado">${camarasInspeccion} u.</span></li>
             `;
 
-            textoPedidoWhatsAppMaster = "Hola! Solicito cotización para el siguiente pliego de materiales sanitarios de YOCALCULO:\n\n";
+            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
+            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
             textoPedidoWhatsAppMaster += "- Caño Fusión 25mm: " + tiras25 + " tiras\n";
             textoPedidoWhatsAppMaster += "- Caño Fusión 20mm: " + tiras20 + " tiras\n";
             textoPedidoWhatsAppMaster += "- Caño Cloacal 110mm O-Ring: " + tiras110 + " tiras\n";
             textoPedidoWhatsAppMaster += "- Caño Desagüe 63mm/50mm: " + tiras63_50 + " tiras\n";
-            textoPedidoWhatsAppMaster += "- Llaves de paso embutir 1/2: " + globalLlavesPaso + " u.\n";
-            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. Saludos!";
+            textoPedidoWhatsAppMaster += "- Llaves de paso embutir 1/2: " + globalLlavesPaso + " u.\n\n";
+            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
 
             var fechaHoy = new Date().toISOString().slice(0,10);
             textoArchivoDescargaMaster = "=========================================================================\r\n";
             textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES SANITARIOS Y CLOACAS DETALLADO\r\n";
+            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
             textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
             textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
             textoArchivoDescargaMaster += "Caño Termofusión 25mm (Tiras de 4m)\t\t\t" + tiras25 + " u.\r\n";
