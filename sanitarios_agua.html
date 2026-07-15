@@ -7,530 +7,86 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
+    <link rel="icon" type="image/png" href="icono.png">
     <link rel="apple-touch-icon" href="icono.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
-        body { margin: 0; background-color: #1e1e24; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
-        .contenedor-app-yocalculo { position: relative; width: 100%; height: 100%; max-width: 432px; max-height: 960px; aspect-ratio: 432 / 960; background-color: #F4F5F7; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0px 10px 40px rgba(0,0,0,0.8); flex-shrink: 0; }
-        @media (max-width: 600px) { .contenedor-app-yocalculo { max-width: none; max-height: none; aspect-ratio: auto; width: 100vw; height: 100vh; box-shadow: none; border: none; } }
+        /* FONDO GENERAL ADAPTATIVO */
+        body { 
+            margin: 0; 
+            background-color: #1e1e24; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+            overflow-y: auto; 
+            font-family: 'Nunito', sans-serif; 
+        }
+
+        /* LIENZO AJUSTADO PARA MÓVILES */
+        .contenedor-app-yocalculo { 
+            position: relative; 
+            width: 100%; 
+            height: 960px; 
+            max-width: 432px; 
+            background-color: #F4F5F7; 
+            box-sizing: border-box; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0px 10px 40px rgba(0,0,0,0.8); 
+            flex-shrink: 0; 
+            margin: 10px 0;
+        }
+
+        @media (max-width: 600px) { 
+            body {
+                align-items: center;
+            }
+            .contenedor-app-yocalculo { 
+                max-width: none; 
+                width: 100vw; 
+                height: 100vh; 
+                box-shadow: none; 
+                border: none; 
+                margin: 0;
+            } 
+        }
+
         .status-bar { background-color: transparent; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; border-bottom: 1px solid #EBEBEB; flex-shrink: 0; }
         .status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+        
         .pantalla { display: none; flex: 1; flex-direction: column; overflow: hidden; height: calc(100% - 36px); position: relative; }
         .pantalla.activa { display: flex; }
+        
         .header-nativo { background-color: #4B4B4D; color: #FFFFFF; padding: 15px; display: flex; align-items: center; flex-shrink: 0; }
         .btn-back-nativo { background: transparent; border: none; color: #FFFFFF; font-size: 20px; cursor: pointer; padding: 0; margin-right: 15px; }
         .header-title { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
-        .contenido-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 110px; box-sizing: border-box; }
+        
+        /* CONTENEDOR DE SCROLL RESPONSIVO */
+        .contenido-scroll { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            padding-bottom: 120px; 
+            box-sizing: border-box; 
+            -webkit-overflow-scrolling: touch;
+        }
+
         .tarjeta-blanca { background-color: #FFFFFF; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #EBEBEB; box-sizing: border-box; border-radius: 6px; }
         .tarjeta-ml { background-color: #FFFDF0; border: 2px solid #FBDD23; text-align: center; }
         .seccion-titulo { color: #4B4B4D; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-top: 0; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F4F5F7; padding-bottom: 4px; }
+        
         label { color: #7A7A7A; display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
-        input[type="number"], input[type="text"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 16px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; }
+        input[type="number"], input[type="text"], select { width: 100%; padding: 8px 0; background-color: transparent; border: none; border-bottom: 1px solid #CCCCCC; box-sizing: border-box; font-size: 16px; color: #4B4B4D; outline: none; font-weight: bold; margin-bottom: 15px; font-family: 'Nunito', sans-serif; }
         input[type="number"]:focus, input[type="text"]:focus, select:focus { border-bottom: 2px solid #4B4B4D; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
         .mapa-contenedor { position: relative; width: 100%; aspect-ratio: 591 / 1000; background-image: url('plano.jpg'); background-size: 100% 100%; background-position: center; border: 1px solid #EBEBEB; box-sizing: border-box; flex-shrink: 0; }
         .zona-click { position: absolute; background-color: transparent !important; border: none !important; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; z-index: 10; }
-        .z-bano     { top: 31%; left: 15%; width: 26%; height: 11%; }
-        .z-lavadero { top: 32%; left: 51%; width: 24%; height: 14%; }
-        .z-cocina   { top: 43%; left: 15%; width: 28%; height: 9%; }
-        .badge-estado { font-size: 11px; color: #7A7A7A; font-weight: bold; text-transform: uppercase; }
-        .barra-inferior { position: absolute; bottom: 0; left: 0; width: 100%; background: #FFFFFF; padding: 15px 20px; box-sizing: border-box; border-top: 1px solid #E5E5E5; z-index: 5; flex-shrink: 0; }
-        .btn-amarillo-fijo { width: 100%; padding: 15px; background-color: #FBDD23; color: #4B4B4D; border: none; font-weight: 900; font-size: 16px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; border-radius: 6px;}
-        .btn-amarillo-fijo:active { filter: brightness(0.95); transform: scale(0.98); }
-        .btn-gris-fijo { width: 100%; padding: 15px; background-color: #4B4B4D; color: #FBDD23; border: none; font-weight: 900; font-size: 15px; text-transform: uppercase; cursor: pointer; transition: filter 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px; border-radius: 6px;}
-        .btn-gris-fijo:active { transform: scale(0.98); }
-        .btn-descargar-archivo-txt { width: 100%; padding: 12px; background-color: #7A7A7A; color: #FFFFFF; border: none; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-align: center; box-sizing: border-box; margin-bottom: 15px; display: block; border-radius: 4px; transition: background-color 0.1s; }
-        .btn-descargar-archivo-txt:active { background-color: #636363; }
-        .btn-whatsapp-proveedor { width: 100%; padding: 12px; background-color: #2ECC71; color: #FFFFFF; border: none; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; border-radius: 4px; display: block; text-decoration: none; box-sizing: border-box; margin-top: 10px; }
-        .btn-whatsapp-proveedor:active { background-color: #27AE60; }
-        .banner-publicitario-estatico-fijo { position: absolute; bottom: 76px; left: 15px; width: calc(100% - 30px); aspect-ratio: 1080 / 450; background-color: #EBEBEB; border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px dashed #7A7A7A; box-sizing: border-box; z-index: 4; }
-        .tag-publicidad { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7A7A7A; font-weight: bold; background: rgba(255,255,255,0.8); padding: 1px 4px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .scroll-con-publicidad-fija { padding-bottom: 240px; }
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { padding: 8px 0; border-bottom: 1px solid #F4F5F7; font-size: 13px; color: #4B4B4D; display: flex; justify-content: space-between; align-items: center; }
-        li:last-child { border-bottom: none; }
-        .destacado { font-weight: bold; font-size: 13px; color: #000; background: #F4F5F7; padding: 2px 6px; border-radius: 4px; }
-        .cargando-presupuesto { text-align: center; padding: 40px 20px; display: none; }
-        .spinner { border: 4px solid #EBEBEB; border-top: 4px solid #FBDD23; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .tarjeta-zona-libre { background-color: #1e1e24; color: #FFFFFF; padding: 20px 15px; border-radius: 8px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border: 2px solid #FBDD23; margin-bottom: 15px; }
-        .tarjeta-zona-libre h3 { margin-top: 0; color: #FBDD23; font-size: 18px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;}
-        .tarjeta-zona-libre p { font-size: 13px; line-height: 1.4; color: #EBEBEB; margin-bottom: 12px; text-align: left; }
-        .tarjeta-zona-libre ul { list-style: none; padding: 0; margin: 0 0 15px 0; text-align: left; }
-        .tarjeta-zona-libre li { color: #FFFFFF; font-size: 12px; margin-bottom: 8px; border-bottom: none; display: flex; align-items: flex-start; padding: 0; line-height: 1.3;}
-        .tarjeta-zona-libre li::before { content: '✔'; color: #FBDD23; margin-right: 8px; font-weight: bold;}
-        .btn-mp-proveedor { background-color: #FBDD23; color: #1e1e24; border: none; padding: 14px; width: 100%; font-size: 14px; font-weight: 900; text-transform: uppercase; border-radius: 6px; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; transition: transform 0.1s;}
-        .btn-mp-proveedor:active { transform: scale(0.98); }
-        .tarjeta-upsell { background-color: #F4F5F7; border: 1px dashed #7A7A7A; padding: 12px; border-radius: 6px; margin-top: 15px; text-align: center; }
-    </style>
-</head>
-<body>
-
-    <div class="contenedor-app-yocalculo">
-        
-        <div class="status-bar">
-            <div class="status-left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B4B4D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v4"></path><path d="M12 18v4"></path><path d="M4.93 4.93l2.83 2.83"></path><path d="M16.24 16.24l2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="M4.93 19.07l2.83-2.83"></path><path d="M16.24 7.76l2.83-2.83"></path>
-                </svg>
-                <span style="color: #4B4B4D; font-weight: 800; font-size: 10px; letter-spacing: 0.5px;">ESTÁS TRABAJANDO EN LÍNEA...</span>
-            </div>
-            <div class="status-right">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBDD23" stroke="#4B4B4D" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <text x="12" y="16.5" font-family="Arial" font-size="13" font-weight="900" fill="#4B4B4D" stroke="none" text-anchor="middle">$</text>
-                </svg>
-            </div>
-        </div>
-
-        <div id="pantalla-plano" class="pantalla activa">
-            <div class="header-nativo"><button class="btn-back-nativo" onclick="location.href='index.html?skip=1'">&#10094;</button><h2 class="header-title">Instalación Sanitaria</h2></div>
-            <div class="contenido-scroll">
-                <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Tus Datos</div>
-                    <label>Tu Nombre y Apellido</label>
-                    <input type="text" id="nombreUsuario" placeholder="Ej: Juan Pérez">
-                </div>
-
-                <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Infraestructura Externa</div>
-                    <div class="grid-2">
-                        <div><label>Dist. a la Calle (m)</label><input type="number" id="distCalle" placeholder="0.00"></div>
-                        <div><label>Altura Tanque (m)</label><input type="number" id="altTanque" placeholder="0.00"></div>
-                    </div>
-                    <label>Distancia de la Vivienda a la vereda (Cloacas)</label><input type="number" id="distAcometida" placeholder="0.00">
-                </div>
-
-                <div class="tarjeta-blanca" style="padding: 0 5px; background-color: transparent; border: none; box-shadow: none;">
-                    <div style="text-align: center; margin-bottom: 12px;">
-                        <span style="color: #4B4B4D; font-size: 15px; font-weight: 800; text-transform: uppercase; display: block; letter-spacing: 0.5px;">Plano de Locales</span>
-                        <span style="font-size: 11px; color: #7A7A7A; font-weight: normal; display: block; margin-top: 2px;">Toca cada local húmedo para configurar sus artefactos.</span>
-                        <span class="badge-estado" style="display: block; margin-top: 6px; font-size: 11px;">Locales configurados: <span id="contador" style="color: #000; font-weight: 800;">0</span></span>
-                    </div>
-                    
-                    <div class="mapa-contenedor">
-                        <button class="zona-click z-bano"  onclick="abrirFormulario('Baño')"></button>
-                        <button class="zona-click z-lavadero" onclick="abrirFormulario('Lavadero')"></button>
-                        <button class="zona-click z-cocina" onclick="abrirFormulario('Cocina')"></button>
-                    </div>
-                </div>
-            </div>
-            <div class="barra-inferior"><button class="btn-amarillo-fijo" onclick="computarTotal()">Generar Cómputo Sanitario</button></div>
-        </div>
-
-        <div id="pantalla-formulario" class="pantalla">
-            <div class="header-nativo"><button class="btn-back-nativo" onclick="volverAlPlano()">&#10094;</button><h2 class="header-title" id="nombreAmbiente">Local Húmedo</h2></div>
-            <div class="contenido-scroll">
-                <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Medidas del Local</div>
-                    <div class="grid-2">
-                        <div><label>Largo (m)</label><input type="number" id="largo" placeholder="0.00"></div>
-                        <div><label>Ancho (m)</label><input type="number" id="ancho" placeholder="0.00"></div>
-                    </div>
-                    <label>Distancia estimada hasta el Tanque (m)</label><input type="number" id="distanciaTanqueLocal" placeholder="0.00">
-                </div>
-                <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Puntos de Consumo y Desagüe</div>
-                    <div class="grid-2" id="contenedor-inputs-dinamicos">
-                        <div><label id="lbl_item1">Inodoros / Bachas</label><input type="number" id="input_item1" placeholder="0"></div>
-                        <div><label id="lbl_item2">Bidet / Lavarropas</label><input type="number" id="input_item2" placeholder="0"></div>
-                        <div><label id="lbl_item3">Lavatorios</label><input type="number" id="input_item3" placeholder="0"></div>
-                        <div><label id="lbl_item4">Duchas / Piletas Patio</label><input type="number" id="input_item4" placeholder="0"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="barra-inferior"><button class="btn-amarillo-fijo" onclick="guardarAmbiente()">✔️ Confirmar Local</button></div>
-        </div>
-
-        <div id="pantalla-resultados" class="pantalla">
-            <div class="header-nativo"><button class="btn-back-nativo" onclick="volverAlPlano()">&#10094;</button><h2 class="header-title">Lista de Materiales</h2></div>
-            <div class="contenido-scroll scroll-con-publicidad-fija">
-                <button class="btn-nuevo-calculo-banner" style="width: 100%; padding: 10px; background: transparent; border: 1px solid #7A7A7A; color: #7A7A7A; font-weight: bold; text-transform: uppercase; border-radius: 4px; margin-bottom: 10px; cursor: pointer;" onclick="reiniciarCalculo()">Nuevo Cálculo</button>
-                <button class="btn-descargar-archivo-txt" onclick="descargarArchivoTextoPedido()">💾 Descargar Listado (.TXT)</button>
-
-                <div class="tarjeta-blanca"><div class="seccion-titulo">1. Distribución Principal Termofusión (25mm)</div><ul id="listaAgua25"></ul></div>
-                <div class="tarjeta-blanca"><div class="seccion-titulo">2. Distribución Interna Termofusión (20mm)</div><ul id="listaAgua20"></ul></div>
-                <div class="tarjeta-blanca"><div class="seccion-titulo">3. Desagües y Cloacas (Sistema O-Ring)</div><ul id="listaCloacas"></ul></div>
-            </div>
-            <div class="banner-publicitario-estatico-fijo">
-                <span class="tag-publicidad">Auspiciante Local</span>
-                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
-            </div>
-            <div class="barra-inferior"><button class="btn-gris-fijo" onclick="iniciarCotizadorML()"><span style="font-size: 24px; line-height: 0; margin-right: 6px; font-weight: 900;">$</span> Cotizar en mi Zona</button></div>
-        </div>
-
-        <div id="pantalla-cotizador" class="pantalla">
-            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-resultados')">&#10094;</button><h2 class="header-title">Cotizador Inteligente</h2></div>
-            <div class="contenido-scroll scroll-con-publicidad-fija" id="form-cotizador">
-                <div class="tarjeta-blanca tarjeta-ml">
-                    <p style="font-size: 11px; color: #7A7A7A; margin-bottom: 5px; font-weight: 800;">VALOR DE REFERENCIA (MERCADO LIBRE AR)</p>
-                    <h2 id="precioMLReferencia" style="color: #4B4B4D; font-size: 32px; margin: 5px 0; font-family: 'Arial Black', sans-serif;">Calculando...</h2>
-                    <p style="font-size: 10px; color: #7A7A7A; margin: 0;">*Costos de materiales promedio + Mano de obra base</p>
-                </div>
-                <div class="tarjeta-blanca">
-                    <div class="seccion-titulo">Ubicación de la obra</div>
-                    <label>Provincia</label>
-                    <select id="provincia_obra">
-                        <option value="Buenos Aires">Buenos Aires</option>
-                        <option value="Capital Federal (CABA)">Capital Federal (CABA)</option>
-                        <option value="Catamarca">Catamarca</option>
-                        <option value="Chaco">Chaco</option>
-                        <option value="Chubut">Chubut</option>
-                        <option value="Córdoba">Córdoba</option>
-                        <option value="Corrientes">Corrientes</option>
-                        <option value="Entre Ríos">Entre Ríos</option>
-                        <option value="Formosa">Formosa</option>
-                        <option value="Jujuy">Jujuy</option>
-                        <option value="La Pampa">La Pampa</option>
-                        <option value="La Rioja">La Rioja</option>
-                        <option value="Mendoza">Mendoza</option>
-                        <option value="Misiones">Misiones</option>
-                        <option value="Neuquén">Neuquén</option>
-                        <option value="Río Negro">Río Negro</option>
-                        <option value="Salta">Salta</option>
-                        <option value="San Juan">San Juan</option>
-                        <option value="San Luis">San Luis</option>
-                        <option value="Santa Cruz">Santa Cruz</option>
-                        <option value="Santa Fe">Santa Fe</option>
-                        <option value="Santiago del Estero">Santiago del Estero</option>
-                        <option value="Tierra del Fuego">Tierra del Fuego</option>
-                        <option value="Tucumán">Tucumán</option>
-                    </select>
-                    <label>Localidad / Ciudad de la Obra</label>
-                    <input type="text" id="localidad_obra" placeholder="Ej: Rosario, Córdoba, San Miguel...">
-                </div>
-            </div>
-            <div class="cargando-presupuesto" id="loader-precios"><div class="spinner"></div><h3 style="color: #4B4B4D; margin-top:0;">Buscando en la nube...</h3></div>
-            <div class="banner-publicitario-estatico-fijo">
-                <span class="tag-publicidad">Auspiciante Local</span>
-                <div style="font-size: 13px; color:#7A7A7A; font-weight: bold; text-align: center; padding: 20px;">Espacio publicitario disponible<br>1080 x 450 px</div>
-            </div>
-            <div class="barra-inferior" id="btn-buscar-precios"><button class="btn-amarillo-fijo" onclick="mostrarProveedores()">Buscar Proveedores</button></div>
-        </div>
-
-        <div id="pantalla-precio-final" class="pantalla">
-            <div class="header-nativo"><button class="btn-back-nativo" onclick="cambiarPantalla('pantalla-cotizador')">✕</button><h2 class="header-title">Proveedores Locales</h2></div>
-            <div class="contenido-scroll" id="contenedor-dinamico-proveedores"></div>
-        </div>
-
-    </div>
-
-    <script>
-        const urlSupabase = 'https://dncxfkkaefjkfzdzivlz.supabase.co';
-        const clavePublica = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3hma2thZWZqa2Z6ZHppdmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNTA1NDcsImV4cCI6MjA5NTgyNjU0N30.BNdiLl6lbINA0WRRGexSaOd1BrNjCxTGHgQkEAsutUI';
-        const supabaseClient = window.supabase.createClient(urlSupabase, clavePublica);
-
-        var localesSanitarios = [];
-        var ambienteActual = "";
-        
-        var globalMetros25 = 0; var globalMetros20 = 0; var globalLlavesPaso = 0;
-        var globalArtefactos110 = 0; var globalArtefactosDesague = 0;
-        
-        var globalFlexiblesMalla = 0; var globalFlexiblesTermo = 0; var globalKitsBomba = 0;
-
-        var textoPedidoWhatsAppMaster = "";
-        var textoArchivoDescargaMaster = "";
-
-        function cambiarPantalla(id) {
-            var pantallas = document.querySelectorAll('.pantalla');
-            for(var i=0; i<pantallas.length; i++) { pantallas[i].classList.remove('activa'); }
-            document.getElementById(id).classList.add('activa');
-        }
-
-        function reiniciarCalculo() {
-            localesSanitarios = [];
-            globalMetros25 = 0; globalMetros20 = 0; globalLlavesPaso = 0;
-            globalArtefactos110 = 0; globalArtefactosDesague = 0;
-            globalFlexiblesMalla = 0; globalFlexiblesTermo = 0; globalKitsBomba = 0;
-            textoPedidoWhatsAppMaster = "";
-            textoArchivoDescargaMaster = "";
-            document.getElementById('contador').innerText = "0";
-            document.getElementById('nombreUsuario').value = "";
-            document.getElementById('distCalle').value = "";
-            document.getElementById('altTanque').value = "";
-            document.getElementById('distAcometida').value = "";
-            limpiarFormularioFisicoA0();
-            cambiarPantalla('pantalla-plano');
-            alert("¡Obra borrada! Todos los formularios regresaron a cero.");
-        }
-
-        function limpiarFormularioFisicoA0() {
-            document.getElementById('largo').value = "";
-            document.getElementById('ancho').value = "";
-            document.getElementById('distanciaTanqueLocal').value = "";
-            document.getElementById('input_item1').value = "";
-            document.getElementById('input_item2').value = "";
-            document.getElementById('input_item3').value = "";
-            document.getElementById('input_item4').value = "";
-        }
-
-        function abrirFormulario(nombre) {
-            ambienteActual = nombre;
-            document.getElementById('nombreAmbiente').innerText = nombre;
-            limpiarFormularioFisicoA0();
-
-            if (nombre === 'Baño') {
-                document.getElementById('lbl_item1').innerText = "Inodoros";
-                document.getElementById('lbl_item2').innerText = "Bidets";
-                document.getElementById('lbl_item3').innerText = "Lavatorios";
-                document.getElementById('lbl_item4').innerText = "Duchas / Bañeras";
-            } else if (nombre === 'Cocina') {
-                document.getElementById('lbl_item1').innerText = "Bachas Simples/Dobles";
-                document.getElementById('lbl_item2').innerText = "Conexión Lavavajillas";
-                document.getElementById('lbl_item3').innerText = "Filtros / Expendedores";
-                document.getElementById('lbl_item4').innerText = "Desagües Extras";
-            } else if (nombre === 'Lavadero') {
-                document.getElementById('lbl_item1').innerText = "Piletas de Lavar";
-                document.getElementById('lbl_item2').innerText = "Conexión Lavarropas";
-                document.getElementById('lbl_item3').innerText = "Termotanque / Calefón";
-                document.getElementById('lbl_item4').innerText = "Rejillas de Piso";
-            }
-
-            cambiarPantalla('pantalla-formulario');
-        }
-
-        function volverAlPlano() { cambiarPantalla('pantalla-plano'); }
-
-        function guardarAmbiente() {
-            var item1 = parseInt(document.getElementById('input_item1').value) || 0;
-            var item2 = parseInt(document.getElementById('input_item2').value) || 0;
-            var item3 = parseInt(document.getElementById('input_item3').value) || 0;
-            var item4 = parseInt(document.getElementById('input_item4').value) || 0;
-            var largo = parseFloat(document.getElementById('largo').value) || 0;
-            var ancho = parseFloat(document.getElementById('ancho').value) || 0;
-            var distT = parseFloat(document.getElementById('distanciaTanqueLocal').value) || 0;
-
-            localesSanitarios.push({
-                nombre: ambienteActual,
-                i1: item1, i2: item2, i3: item3, i4: item4,
-                largo: largo, ancho: ancho, distT: distT
-            });
-
-            document.getElementById('contador').innerText = localesSanitarios.length;
-            limpiarFormularioFisicoA0();
-            volverAlPlano();
-        }
-
-        function computarTotal() {
-            if(localesSanitarios.length === 0) { alert("Socio, tocá un local del plano primero para configurarlo."); return; }
-
-            var nombreCliente = document.getElementById('nombreUsuario').value.trim() || "Un constructor";
-
-            var distCalle = parseFloat(document.getElementById('distCalle').value) || 0;
-            var altTanque = parseFloat(document.getElementById('altTanque').value) || 0;
-            var distAcometida = parseFloat(document.getElementById('distAcometida').value) || 0;
-
-            globalMetros25 = distCalle + altTanque;
-            globalMetros20 = 0;
-            globalLlavesPaso = 0;
-            globalArtefactos110 = 0;
-            globalArtefactosDesague = 0;
-            globalFlexiblesMalla = 0;
-            globalFlexiblesTermo = 0;
-            globalKitsBomba = 0;
-
-            var totalLocalesActivos = localesSanitarios.length;
-
-            for(var i=0; i<totalLocalesActivos; i++) {
-                var local = localesSanitarios[i];
-                globalMetros25 += local.distT + 4;
-                globalLlavesPaso += 2;
-                var totalArtefactosLocal = local.i1 + local.i2 + local.i3 + local.i4;
-                globalMetros20 += ((local.largo + local.ancho) * 2) + (totalArtefactosLocal * 2.5);
-
-                if (local.nombre === 'Baño') {
-                    globalArtefactos110 += local.i1;
-                    globalArtefactosDesague += local.i2 + local.i3 + local.i4;
-                    globalFlexiblesMalla += (local.i2 * 2) + (local.i3 * 2);
-                } else if (local.nombre === 'Cocina') {
-                    globalArtefactosDesague += totalArtefactosLocal;
-                    globalFlexiblesMalla += (local.i1 * 2);
-                } else if (local.nombre === 'Lavadero') {
-                    globalArtefactosDesague += totalArtefactosLocal;
-                    globalFlexiblesMalla += (local.i1 * 2);
-                    if (local.i3 > 0) {
-                        globalFlexiblesTermo += (local.i3 * 2);
-                        globalKitsBomba += 1;
-                    }
-                }
-            }
-
-            var tiras25 = Math.ceil(globalMetros25 / 4);
-            var codos25 = Math.ceil(tiras25 * 1.8);
-            var te25 = Math.ceil(totalLocalesActivos * 1.5);
-            var tiras20 = Math.ceil(globalMetros20 / 4);
-            var codos20 = Math.ceil(globalMetros20 * 0.6);
-            var te20 = Math.ceil(globalMetros20 * 0.2);
-            var terminalesRoscaMetallica = (globalLlavesPaso * 2) + (globalMetros20 * 0.3);
-            var tiras110 = Math.ceil((globalArtefactos110 * 3) + (distAcometida * 0.8));
-            if(tiras110 < 2) tiras110 = 2;
-            var tiras63_50 = Math.ceil(globalArtefactosDesague * 1.5);
-            var piletasPatioSifon = totalLocalesActivos;
-            var camarasInspeccion = Math.ceil(distAcometida / 15);
-            if(camarasInspeccion < 1) camarasInspeccion = 1;
-
-            document.getElementById('listaAgua25').innerHTML = `
-                <li><span>Caño Termofusión 25mm (Tiras de 4m)</span> <span class="destacado">${tiras25} u.</span></li>
-                <li><span>Codos 90° Termofusión 25mm</span> <span class="destacado">${codos25} u.</span></li>
-                <li><span>Te Derivación Termofusión 25mm</span> <span class="destacado">${te25} u.</span></li>
-                <li><span>Kit Conexión Tanque (Conector + Flotante mecánico)</span> <span class="destacado">1 Kit</span></li>
-                ${globalKitsBomba > 0 ? `<li><span>Kit Conexión de Bomba (Uniones + Retención)</span> <span class="destacado">${globalKitsBomba} Kit</span></li>` : ''}
-            `;
-
-            document.getElementById('listaAgua20').innerHTML = `
-                <li><span>Caño Termofusión 20mm (Tiras de 4m)</span> <span class="destacado">${tiras20} u.</span></li>
-                <li><span>Codos 90° Termofusión 20mm</span> <span class="destacado">${Math.round(codos20)} u.</span></li>
-                <li><span>Te Unión Termofusión 20mm</span> <span class="destacado">${Math.round(te20)} u.</span></li>
-                <li><span>Llaves de Paso Embutir F/C (Con Campana Cromo)</span> <span class="destacado">${globalLlavesPaso} u.</span></li>
-                <li><span>Terminales Fusión C/Rosca Metálica H/M 1/2"</span> <span class="destacado">${Math.round(terminalesRoscaMetallica)} u.</span></li>
-                <li><span>Flexibles Malla Acero Inox 1/2" x 40cm</span> <span class="destacado">${globalFlexiblesMalla} u.</span></li>
-                ${globalFlexiblesTermo > 0 ? `<li><span>Flexibles Reforzados Alta Temperatura 3/4"</span> <span class="destacado">${globalFlexiblesTermo} u.</span></li>` : ''}
-            `;
-
-            document.getElementById('listaCloacas').innerHTML = `
-                <li><span>Caño PVC/PP 110mm C/O-Ring (Tiras de 3m)</span> <span class="destacado">${tiras110} u.</span></li>
-                <li><span>Caño Desagüe 63mm / 50mm (Tiras de 3m)</span> <span class="destacado">${tiras63_50} u.</span></li>
-                <li><span>Piletas de Patio Abiertas C/Sifón y Rejilla</span> <span class="destacado">${piletasPatioSifon} u.</span></li>
-                <li><span>Ramal Y griega 110x110 y Codos 45°</span> <span class="destacado">${Math.ceil(tiras110 * 1.2)} u.</span></li>
-                <li><span>Cámara de Inspección PVC Hermética 60x60</span> <span class="destacado">${camarasInspeccion} u.</span></li>
-            `;
-
-            textoPedidoWhatsAppMaster = "¡Hola! Mi nombre es " + nombreCliente + ".\n";
-            textoPedidoWhatsAppMaster += "Solicito cotización para el siguiente pliego técnico de materiales desde la app YoCalculo:\n\n";
-            textoPedidoWhatsAppMaster += "- Caño Fusión 25mm: " + tiras25 + " tiras\n";
-            textoPedidoWhatsAppMaster += "- Caño Fusión 20mm: " + tiras20 + " tiras\n";
-            textoPedidoWhatsAppMaster += "- Caño Cloacal 110mm O-Ring: " + tiras110 + " tiras\n";
-            textoPedidoWhatsAppMaster += "- Caño Desagüe 63mm/50mm: " + tiras63_50 + " tiras\n";
-            textoPedidoWhatsAppMaster += "- Llaves de paso embutir 1/2: " + globalLlavesPaso + " u.\n\n";
-            textoPedidoWhatsAppMaster += "Aguardamos su cotización final puesta en obra. ¡Saludos!";
-
-            var fechaHoy = new Date().toISOString().slice(0,10);
-            textoArchivoDescargaMaster = "=========================================================================\r\n";
-            textoArchivoDescargaMaster += "YOCALCULO  -  PLIEGO DE MATERIALES SANITARIOS Y CLOACAS DETALLADO\r\n";
-            textoArchivoDescargaMaster += "Solicitante: " + nombreCliente + "\r\n";
-            textoArchivoDescargaMaster += "Fecha de Emisión: " + fechaHoy + "\r\n";
-            textoArchivoDescargaMaster += "=========================================================================\r\n\r\n";
-            textoArchivoDescargaMaster += "Caño Termofusión 25mm (Tiras de 4m)\t\t\t" + tiras25 + " u.\r\n";
-            textoArchivoDescargaMaster += "Caño Termofusión 20mm (Tiras de 4m)\t\t\t" + tiras20 + " u.\r\n";
-            textoArchivoDescargaMaster += "Caño PVC/PP 110mm O-Ring (Tiras de 3m)\t\t\t" + tiras110 + " u.\r\n";
-            textoArchivoDescargaMaster += "Cámara de Inspección PVC Hermética 60x60\t\t\t" + camarasInspeccion + " u.\r\n";
-
-            cambiarPantalla('pantalla-resultados');
-        }
-
-        function descargarArchivoTextoPedido() {
-            if(textoArchivoDescargaMaster === "") { alert("Socio, no hay un cómputo generado para descargar."); return; }
-            var blob = new Blob([textoArchivoDescargaMaster], { type: "text/plain;charset=utf-8" });
-            var elementoEnlace = document.createElement("a");
-            elementoEnlace.href = URL.createObjectURL(blob);
-            elementoEnlace.download = "YoCalculo_Pliego_Sanitario_" + new Date().toISOString().slice(0,10) + ".txt";
-            document.body.appendChild(elementoEnlace); elementoEnlace.click(); document.body.removeChild(elementoEnlace);
-        }
-
-        function enviarPedidoPorWhatsApp(telefonoProveedor, nombreProveedor) {
-            if(textoPedidoWhatsAppMaster === "") { alert("Socio, no hay materiales calculados para despachar."); return; }
-            var urlWhatsappNativa = "https://api.whatsapp.com/send?phone=" + telefonoProveedor + "&text=" + encodeURIComponent(textoPedidoWhatsAppMaster);
-            window.open(urlWhatsappNativa, '_blank');
-        }
-
-        async function buscarPrecioML(termino) {
-            try {
-                var respuesta = await fetch("https://api.mercadolibre.com/sites/MLA/search?q=" + encodeURIComponent(termino) + "&condition=new&limit=4");
-                var datos = await respuesta.json();
-                if(datos.results && datos.results.length > 0) {
-                    var total = 0; var cv = Math.min(datos.results.length, 3);
-                    for(var i=0; i<cv; i++) { total += datos.results[i].price; }
-                    return total / cv;
-                } return 0;
-            } catch (error) { return 0; }
-        }
-
-        async function iniciarCotizadorML() {
-            cambiarPantalla('pantalla-cotizador');
-            document.getElementById('precioMLReferencia').innerText = "Calculando...";
-            var precios = await Promise.all([
-                buscarPrecioML("cano termofusion 25mm aqua system"),
-                buscarPrecioML("cano cloacal 110 awaduct o ring"),
-                buscarPrecioML("camara de inspeccion pvc 60x60")
-            ]);
-            var pAgua = precios[0] || 7500; var pCloaca = precios[1] || 18500; var pCamara = precios[2] || 32000;
-            var costoMaterialesBase = (globalMetros25/4 * pAgua) + (globalMetros20/4 * (pAgua * 0.8)) + pCloaca + pCamara;
-            var costoMaterialesTotal = costoMaterialesBase * 2.55; 
-            var puntosSanitariosManoObra = (globalLlavesPaso / 2) + globalArtefactos110 + globalArtefactosDesague + (globalKitsBomba * 1.5);
-            var costoManoObra = puntosSanitariosManoObra * 45000; 
-            var presupuestoFinal = costoMaterialesTotal + costoManoObra;
-            document.getElementById('precioMLReferencia').innerText = "$ " + Math.round(presupuestoFinal).toLocaleString('es-AR');
-        }
-
-        async function mostrarProveedores() {
-            var provincia_seleccionada = document.getElementById('provincia_obra').value;
-            var localidad_escrita = document.getElementById('localidad_obra').value.trim().toUpperCase();
-
-            if (localidad_escrita === "") { alert("Socio, por favor escribí la localidad de la obra."); return; }
-
-            document.getElementById('form-cotizador').style.display = 'none';
-            document.getElementById('btn-buscar-precios').style.display = 'none';
-            document.getElementById('loader-precios').style.display = 'block';
-
-            try {
-                const [resMateriales, resManoObra] = await Promise.all([
-                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'sanitaria').eq('estado_suscripcion', 'activa'),
-                    supabaseClient.from('proveedores').select('*').eq('rubro_especifico', 'mano_obra_sanitaria').eq('estado_suscripcion', 'activa')
-                ]);
-
-                const matData = (resMateriales.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
-                const moData = (resManoObra.data || []).filter(p => p.localidad.trim().toUpperCase() === localidad_escrita && p.provincia === provincia_seleccionada);
-
-                const contenedor = document.getElementById('contenedor-dinamico-proveedores');
-                contenedor.innerHTML = ""; 
-
-                let htmlMat = "";
-                if (matData.length > 0) {
-                    htmlMat += `<div class="tarjeta-blanca"><div class="seccion-titulo" style="color: #27AE60;">🧱 CASAS DE SANITARIOS DESTACADAS</div>`;
-                    matData.forEach(prov => {
-                        htmlMat += `
-                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
-                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
-                                <span style="font-size: 11px; color: #7A7A7A;">📍 Zona: ${prov.localidad}, ${prov.provincia}</span>
-                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Enviar Pliego por WhatsApp</button>
-                            </div>`;
-                    });
-                    htmlMat += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos corralón o casa de sanitarios? Suscribite acá</a></div></div>`;
-                } else {
-                    htmlMat += `<div class="tarjeta-zona-libre"><h3>🚧 MATERIALES:<br>ZONA LIBRE</h3><p>No hay corralones ni casas de sanitarios destacadas aquí.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=efa3c7ec3f76474399243b8c2ed11470" target="_blank" class="btn-mp-proveedor">Quiero ser el Primer Proveedor</a></div>`;
-                }
-
-                let htmlMo = "";
-                if (moData.length > 0) {
-                    htmlMo += `<div class="tarjeta-blanca" style="margin-top: 5px;"><div class="seccion-titulo" style="color: #2980B9;"></div>  👷‍♂️ PLOMEROS Y GASISTAS MATRICULADOS</div>`;
-                    moData.forEach(prov => {
-                        htmlMo += `
-                            <div style="border-bottom: 1px solid #EBEBEB; padding-bottom: 12px; margin-bottom: 12px;">
-                                <span style="font-weight: bold; font-size: 14px; color: #1e1e24; display:block;">${prov.nombre_comercial}</span>
-                                <span style="font-size: 11px; color: #7A7A7A;">📍 Cobertura: ${prov.localidad}, ${prov.provincia}</span>
-                                <button class="btn-whatsapp-proveedor" onclick="enviarPedidoPorWhatsApp('${prov.telefono_whatsapp}', '${prov.nombre_comercial}')">📱 Contactar Plomero</button>
-                            </div>`;
-                    });
-                    htmlMo += `<div class="tarjeta-upsell"><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" style="color:#2980B9; font-size:11px; font-weight:bold; text-decoration:none;">¿Sos plomero o gasista? Suscribite acá</a></div></div>`;
-                } else {
-                    htmlMo += `<div class="tarjeta-zona-libre" style="border-color: #2980B9;"><h3>🚧 MANO DE OBRA:<br>ZONA LIBRE</h3><p>No hay sanitaristas ni plomeros matriculados registrados aquí.</p><a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=658b810c7dbd4ac5ba7272e2786f5e93" target="_blank" class="btn-mp-proveedor" style="background-color: #2980B9; color: #FFFFFF;">Quiero Postularme Acá</a></div>`;
-                }
-
-                contenedor.innerHTML = htmlMat + htmlMo;
-            } catch (err) {
-                console.error(err);
-                document.getElementById('contenedor-dinamico-proveedores').innerHTML = `<p style="text-align:center; padding:20px; font-weight:bold; color:#4B4B4D;">Error de conexión.</p>`;
-            }
-
-            document.getElementById('form-cotizador').style.display = 'block';
-            document.getElementById('loader-precios').style.display = 'none';
-            document.getElementById('btn-buscar-precios').style.display = 'block';
-            cambiarPantalla('pantalla-precio-final');
-        }
-    </script>
-</body>
-</html>
+        .z-bano     { top: 31%; left

@@ -8,34 +8,35 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
     
+    <link rel="icon" type="image/png" href="icono.png">
     <link rel="apple-touch-icon" href="icono.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="YOCALCULO">
 
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+
     <style>
+        /* FONDO GENERAL ADAPTATIVO CON LIBERACIÓN DE SCROLL EN CELULARES */
         html, body { 
             margin: 0; 
             padding: 0; 
             width: 100%; 
-            height: 100%; 
             background-color: #1e1e24; 
             display: flex; 
             justify-content: center; 
-            align-items: center; 
-            overflow: hidden; 
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            align-items: flex-start; /* Permite scroll natural desde arriba en pantallas cortas */
+            min-height: 100vh; 
+            overflow-y: auto; /* Habilita el desplazamiento si las barras del navegador tapan contenido */
+            font-family: 'Nunito', sans-serif;
         }
         
-        /* --- 1. CHASIS ULTRA-BLINDADO (FIJA LA PROPORCIÓN BASE) --- */
+        /* --- 1. CHASIS RECONFIGURADO (ELÁSTICO Y SEGURO) --- */
         .contenedor-app-yocalculo {
             position: relative; 
-            height: 100vh; 
-            height: 100dvh; 
-            max-height: 960px; 
+            height: 960px; /* Mantiene la proporción interna perfecta de diseño */
             width: 100%;
             max-width: 432px;  
-            aspect-ratio: 432 / 960; 
             background-image: url('fondo_index.jpg'); 
             background-size: 100% 100%; 
             background-position: center; 
@@ -46,20 +47,23 @@
             flex-direction: column;
             overflow: hidden;
             box-shadow: 0px 10px 40px rgba(0,0,0,0.8); 
+            flex-shrink: 0;
+            margin: 10px 0; /* Espaciado estético en PC */
         }
 
-        /* --- 2. DETECTOR REAL PARA CELULARES (PROHIBIDO EL DESBORDE) --- */
+        /* --- 2. DETECTOR REAL PARA PANTALLAS CELULARES --- */
         @media (max-width: 600px) {
+            html, body {
+                align-items: center;
+            }
             .contenedor-app-yocalculo {
-                max-width: 432px;     
-                max-height: 960px;    
-                aspect-ratio: 432 / 960;  
+                max-width: none;     
                 width: 100vw;        
                 height: 100vh;      
-                height: 100dvh;      
                 box-shadow: none;    
-                background-size: contain; /* Bloquea el estiramiento deforme */
+                background-size: cover; /* Asegura cobertura total del fondo en cualquier cel */
                 background-position: center;
+                margin: 0;
             }
         }
         
@@ -119,7 +123,6 @@
         .btn-seco         { top: 55.2%; left: 5.0%;  width: 42.5%; height: 13.5%; }
         .btn-techos       { top: 55.2%; left: 52.5%; width: 42.5%; height: 13.5%; }
         
-        /* AJUSTE MAESTRO: Los dos botones simétricos alineados con el gráfico */
         .btn-profesionales { top: 71.2%; left: 5.0%;  width: 42.5%; height: 13.5%; }
         .btn-mano-obra     { top: 71.2%; left: 52.5%; width: 42.5%; height: 13.5%; }
         
@@ -192,7 +195,6 @@
             navigator.serviceWorker.register('sw.js').then(function() { console.log("Motor PWA activo."); });
         }
 
-        // --- BLINDAJE ANTI-COPIAS ---
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74))) {
@@ -212,7 +214,6 @@
             window.open("https://api.whatsapp.com/send?phone=" + nroSocio + "&text=" + encodeURIComponent(msg), '_blank');
         }
 
-        // --- CONTADOR ESTRATÉGICO ---
         function simularUsuariosActivos() {
             var numeroFiel = 21 + Math.floor(Math.random() * 13); 
             var selectorTexto = document.querySelector('.status-bar span');
